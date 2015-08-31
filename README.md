@@ -38,7 +38,7 @@ A user can by anonymous or a registered user with a username and password. The s
 
 <b>Availability</b>
 
-Databuddy is written in Java and can be used anywhere you can fit a JVM.  If there's no Client API available for the language you're lookng for, it's pretty simple to write -- kind of like talking to Memcached, open a port and write some bytes, then read some bytes.
+Databuddy is written in Java and can be used anywhere you can fit a JVM (Java 1.8_60).  If there's no Client API available for the language you're lookng for, it's pretty simple to write -- kind of like talking to Memcached, open a port and write some bytes, then read some bytes.
 Given that I use this in Unity, there should no doubt be some progress on a C# Client API.  If you do produce a Client API for other useful languages, please let me know and I can link to for others to find.
 
 
