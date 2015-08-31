@@ -8,7 +8,7 @@ It can be bundled up with your desktop application or deployed on a server.
 Status
 ======
 
-Currently DataBuddy is incomplete.  The server is working and is capable of handling concurrent users and concurrent commands from users.  However put and get data is not yet persisted (a key requirement) but it will be there soon. Like hours, maybe days...?
+Currently DataBuddy is incomplete and much of it is proof of concept hacked together, don't judge me at this point I'm like 3 hours invested.  The server is working and is capable of handling concurrent users and concurrent commands from users.  However put and get data is not yet persisted (a key requirement) but it will be there soon. Like hours, maybe days...?
 
 Project Details
 ======
