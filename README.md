@@ -5,6 +5,14 @@ Its a datastore that aims to be ultra portable, lightweight and very powerful.
 
 It can be bundled up with your desktop application or deployed on a server.
 
+Status
+======
+
+Currently DataBuddy is incomplete.  The server is working and is capable of handling concurrent users and concurrent commands from users.  However put and get data is not yet persisted (a key requirement) but it will be there soon. Like hours, maybe days...?
+
+Project Details
+======
+
 <b>Overview</b>
 
 When developing a game, its painful to abstract storing data so that it can be agnostic about whether that game is running locally or a client to a remove server.
