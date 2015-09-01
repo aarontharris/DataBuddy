@@ -28,9 +28,9 @@ You simply send data to the server associated with a topic and an id, and later 
 You will need to be aware that performance is greatly dependent on how you structure your data as poor associations can get messy.
 There are no joins, so its on you.
 
-EX: put [topic] [id] [data]
+EX: put (topic) (id) (data)
 
-EX: get [topic] [id]
+EX: get (topic) (id)
 
 <b>Security</b>
 DataBuddy isn't fancy.  It knows about a system operator role and a user role.  To connect you must introduce yourself as one of these roles and present the proper credentials.
