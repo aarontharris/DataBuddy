@@ -1,16 +1,24 @@
-package com.leap12.databuddy.connections;
+package com.leap12.databuddy;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 import com.leap12.common.ClientConnection;
-import com.leap12.common.ClientConnectionDelegate;
+import com.leap12.common.ConnectionDelegate;
 import com.leap12.common.Log;
 import com.leap12.common.Pair;
 import com.leap12.common.StrUtl;
+import com.leap12.databuddy.Commands.CmdRequest;
 
-public class BaseConnection extends ClientConnectionDelegate {
+public class BaseConnection extends ConnectionDelegate {
+
+	public final void writeFailResponse(String msg, CmdRequest<?> request) {
+		try {
+			writeResponse(String.format("ERR %s : %s", request.getStatus(), request.getStatusMessage()));
+		} catch (Exception e) {
+			Log.e(e);
+		}
+	}
 
 	protected Map<String, String> getCmdBeginMap(String msg) throws Exception {
 		if (isCmdBegin(msg)) {
@@ -54,6 +62,7 @@ public class BaseConnection extends ClientConnectionDelegate {
 
 	@Override
 	protected final void doAttached(ClientConnection connection) throws Exception {
+		connection.setLineSeparator(Config.get().getLineSeparator());
 		super.doAttached(connection);
 	}
 

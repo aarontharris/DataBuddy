@@ -18,12 +18,11 @@ public final class DataBuddy {
 	}
 
 	private boolean running = false;
-	// private List<WeakReference<ClientConnection>> connections = null;
 	private WeakHashMap<ClientConnection, Long> connections = null;
 	private CountDownLatch latch = null;
 
 	private DataBuddy() {
-		Config.get().setSystemProperties(System.getProperties());
+		Config.get().initialize(System.getProperties());
 	}
 
 	public synchronized void startup() throws Exception {

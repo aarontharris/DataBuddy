@@ -1,13 +1,16 @@
 package com.leap12.databuddy.connections;
 
-import java.util.Map;
-
 import com.leap12.common.Log;
+import com.leap12.databuddy.BaseConnection;
+import com.leap12.databuddy.Commands;
+import com.leap12.databuddy.Commands.CmdRequest;
+import com.leap12.databuddy.Commands.CmdRequest.RequestStatus;
+import com.leap12.databuddy.Commands.Role;
 
 public class HandshakeConnection extends BaseConnection {
 
 	public HandshakeConnection() {
-		setInactivityTimeout(15000);
+		// setInactivityTimeout(15000);
 	}
 
 	@Override
@@ -17,7 +20,8 @@ public class HandshakeConnection extends BaseConnection {
 			getClientConnection().setDelegate(connection);
 		} catch (Exception e) {
 			Log.e(e);
-			writeLnMsgSafe(e.getMessage());
+			// writeLnMsgSafe(e.getMessage());
+			writeResponse(e.getMessage());
 			getClientConnection().stop();
 		}
 	}
@@ -26,34 +30,36 @@ public class HandshakeConnection extends BaseConnection {
 	 * expects:
 	 * 
 	 * <pre>
-	 * begin;request_auth=user&username=theUsername&password=thePassword;end
+	 * auth request_auth=user&username=theUsername&password=thePassword
 	 * or
-	 * begin;request_auth=sysop&username=theUsername&password=thePassword;end
+	 * auth request_auth=sysop&username=theUsername&password=thePassword
 	 * </pre>
+	 * 
 	 * @param msg
 	 * @return Appropriate connection;
 	 */
 	private UserConnection handleAuthenticateUser(String msg) throws Exception {
-		if (msg.contains("request_auth")) {
-			try {
-				Map<String, String> request = getCmdBeginMap(msg);
-				for (String key : request.keySet()) {
-					Log.d("'%s'=>'%s'", key, request.get(key));
-				}
+		if (Commands.CMD_AUTH.isCommand(msg)) {
+			CmdRequest<Role> request = Commands.CMD_AUTH.parseCommand(this, msg);
+			if (RequestStatus.SUCCESS == request.getStatus()) {
 
-				String authType = request.get("request_auth");
-				if ("user".equals(authType)) {
-					// TODO validate
-					return new UserConnection();
-				} else if ("sysop".equals(authType)) {
-					// TODO validate
-					return new SysOpConnection();
-				}
-			} catch (Exception e) {
-				writeLnMsgSafe("ERR: " + e.getMessage());
+				// validate user
+
+				return toConnection(request);
 			}
 		}
-		throw new Exception("ungentlemanly introductions");
+		throw new Exception("invalid command");
+	}
+
+	private UserConnection toConnection(CmdRequest<Role> request) {
+		Role role = request.getValue();
+		switch (role) {
+		case sysop:
+			return new SysOpConnection();
+		case user:
+			return new UserConnection();
+		}
+		throw new IllegalStateException("Unknown Role " + role);
 	}
 
 }

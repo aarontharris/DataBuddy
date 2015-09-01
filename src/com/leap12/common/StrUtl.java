@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.leap12.common.props.PropsWrite;
 
 public class StrUtl {
 	public static final String EMPTY = "";
@@ -18,6 +19,54 @@ public class StrUtl {
 
 	public static boolean isEmpty(String string) {
 		return string == null || string.isEmpty();
+	}
+
+	/**
+	 * True if all of the given strings are empty<br>
+	 * Inverse of {@link #isNotEmptyAny(String...)}
+	 */
+	public static boolean isEmptyAll(String... strings) {
+		if (strings.length == 0) {
+			return true;
+		}
+		for (String s : strings) {
+			if (!isEmpty(s)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * True if all of the given strings are not empty<br>
+	 * Inverse of {@link #isEmptyAny(String...)}
+	 */
+	public static boolean isNotEmptyAll(String... strings) {
+		if (strings.length == 0) {
+			return false;
+		}
+		for (String s : strings) {
+			if (isEmpty(s)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * True if any of the given strings are empty<br>
+	 * Inverse of {@link #isNotEmptyAll(String...)}
+	 */
+	public static boolean isEmptyAny(String... strings) {
+		return !isNotEmptyAll(strings);
+	}
+
+	/**
+	 * True if any of the given strings are not empty<br>
+	 * Inverse of {@link #isEmptyAll(String...)}
+	 */
+	public static boolean isNotEmptyAny(String... strings) {
+		return !isEmptyAll(strings);
 	}
 
 	/** @return true if both are equal, but false if either is empty */
@@ -98,6 +147,26 @@ public class StrUtl {
 			out = tmp;
 		}
 		return out;
+	}
+
+	/**
+	 * @param in
+	 * @param pairDelim
+	 * @param recordDelim
+	 * @return
+	 * @throws Exception if any of the values are null
+	 */
+	public static void toProps(String in, String pairDelim, String recordDelim, PropsWrite props) throws Exception {
+		String[] records = in.split(recordDelim);
+		if (records.length > 0) {
+			for (String record : records) {
+				String[] parts = record.split(pairDelim);
+				if (parts.length != 2) {
+					throw new IllegalStateException("Expected pairs but got an odd number");
+				}
+				props.putString(parts[0], parts[1]);
+			}
+		}
 	}
 
 	public static String toString(InputStream in) throws Exception {

@@ -10,16 +10,18 @@ import java.net.Socket;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ClientConnection {
-	private static ClientConnectionDelegate DEFAULT_DELEGATE = new ClientConnectionDelegate();
+	private static ConnectionDelegate DEFAULT_DELEGATE = new ConnectionDelegate();
 
 	private final Socket socket;
-	private ClientConnectionDelegate delegate;
+	private ConnectionDelegate delegate;
 	private CopyOnWriteArrayList<WeakReference<ConnectionEventListener>> listeners;
 	private boolean running = false;
+	private String mLineSeparator;
 
 	public ClientConnection(Socket socket) {
 		this.socket = socket;
 		setDelegate(DEFAULT_DELEGATE);
+		setLineSeparator(System.getProperty("line.separator"));
 	}
 
 	@Override
@@ -36,7 +38,7 @@ public class ClientConnection {
 		return socket;
 	}
 
-	public void setDelegate(ClientConnectionDelegate delegate) {
+	public void setDelegate(ConnectionDelegate delegate) {
 		try {
 			if (this.delegate != null) {
 				this.delegate.doDetatched();
@@ -80,11 +82,10 @@ public class ClientConnection {
 		}
 	}
 
-	public final void writeLnMsg(String msg) throws Exception {
-		writeMsg(msg, true);
-	}
-
-	/** never throws - convenience for when you don't care about errors */
+	/**
+	 * Auto-Flushes every line see {@link #writeLnMsgSafe(String, boolean)} if you want to batch never throws - convenience for when you don't care
+	 * about errors
+	 * */
 	public final void writeLnMsgSafe(String msg) {
 		try {
 			writeLnMsg(msg);
@@ -93,17 +94,43 @@ public class ClientConnection {
 		}
 	}
 
-	public final void writeMsg(String msg) throws Exception {
-		writeMsg(msg, false);
+	public final void writeLnMsg(String msg) throws Exception {
+		writeMsg(msg, 1);
 	}
 
-	/** never throws - convenience for when you don't care about errors */
-	public final void writeMsgSafe(String msg) {
-		try {
-			writeMsg(msg);
-		} catch (Exception e) {
-			Log.e(e);
+	public final void writeMsg(String msg) throws Exception {
+		writeMsg(msg, 0);
+	}
+
+	/**
+	 * Write a message to the client.
+	 * @param msg - the message
+	 * @param appendNewLines - number of newline chars to be appended to the message
+	 * @param flush - flush the stream after write
+	 * @throws Exception - if something went wrong during the write
+	 */
+	public final void writeMsg(String msg, int appendNewLines) throws Exception {
+		if (isSocketOpen()) {
+			OutputStream out = socket.getOutputStream();
+			BufferedOutputStream bOut = new BufferedOutputStream(out);
+			bOut.write(msg.getBytes());
+			if (appendNewLines == 1) {
+				bOut.write('\n');
+			} else if (appendNewLines > 1) {
+				for (int i = 0; i < appendNewLines; i++) {
+					bOut.write('\n');
+				}
+			}
+			bOut.flush();
 		}
+	}
+
+	public void setLineSeparator(String separator) {
+		mLineSeparator = separator;
+	}
+
+	public String getLineSeparator() {
+		return mLineSeparator;
 	}
 
 	public final boolean isSocketOpen() {
@@ -180,8 +207,6 @@ public class ClientConnection {
 		try {
 			if ("quit".equals(msg)) {
 				doReceivedQuit();
-			} else if ("ping".equals(msg)) {
-				writeLnMsg("pong");
 			} else {
 				doReceivedMsg(msg);
 			}
@@ -261,15 +286,4 @@ public class ClientConnection {
 		return false;
 	}
 
-	private final void writeMsg(String msg, boolean includeNewline) throws Exception {
-		if (isSocketOpen()) {
-			OutputStream out = socket.getOutputStream();
-			BufferedOutputStream bOut = new BufferedOutputStream(out);
-			bOut.write(msg.getBytes());
-			if (includeNewline) {
-				bOut.write('\n');
-			}
-			bOut.flush();
-		}
-	}
 }
