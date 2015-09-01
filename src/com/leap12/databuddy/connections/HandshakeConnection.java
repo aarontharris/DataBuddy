@@ -43,7 +43,7 @@ public class HandshakeConnection extends BaseConnection {
 			CmdRequest<Role> request = Commands.CMD_AUTH.parseCommand(this, msg);
 			if (RequestStatus.SUCCESS == request.getStatus()) {
 
-				// validate user
+				// TODO validate user -- maybe send them to the appropriate connection and let that connection do the validation? This would better support an anonymous type
 
 				return toConnection(request);
 			}
