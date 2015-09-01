@@ -25,7 +25,7 @@ public class AuthCmd extends Command<Role> {
 	public CmdRequest<Role> parseCommand(BaseConnection connection, String msg) {
 		CmdRequestMutable<Role> request = new CmdRequestMutable<>();
 		try {
-			msg = msg.substring(beginIndex, msg.length() - 1); // from=zero-based-inclusive, to=zero-based-inclusive
+			msg = msg.substring(beginIndex, msg.length()); // from=zero-based-inclusive, to=zero-based-inclusive
 			Map<String, String> fields = StrUtl.toMap(msg, "=", "&");
 			String roleStr = fields.get("request_auth");
 

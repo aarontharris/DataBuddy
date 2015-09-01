@@ -180,12 +180,13 @@ public final class Commands {
 		}
 
 		T mValue;
-		RequestStatus mStatus = RequestStatus.FAIL_UNKNOWN;
-		String mStatusMessage = StrUtl.EMPTY;
+		RequestStatus mStatus;
+		String mStatusMessage;
 		Throwable mError;
 		Props mArgs;
 
 		private CmdRequest() {
+			this(null, RequestStatus.FAIL_UNKNOWN);
 		}
 
 		public CmdRequest(T value, RequestStatus status) {
@@ -201,6 +202,7 @@ public final class Commands {
 			this.mStatus = status;
 			this.mError = error;
 			this.mArgs = args;
+			this.mStatusMessage = StrUtl.EMPTY;
 			if (this.mArgs == null) {
 				this.mArgs = Props.EMPTY;
 			}
