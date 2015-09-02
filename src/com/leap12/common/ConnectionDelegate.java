@@ -11,6 +11,11 @@ public class ConnectionDelegate {
 		onAttached(connection);
 	}
 
+	/**
+	 * Delegate is always attached before all else
+	 * @param connection The connection the delegate is attached to
+	 * @throws Exception
+	 */
 	protected void onAttached(ClientConnection connection) throws Exception {
 		// Log.d(getClass().getName() + " onAttached");
 	}
@@ -19,6 +24,9 @@ public class ConnectionDelegate {
 		onConnectionOpened();
 	}
 
+	/**
+	 * Only called if this is the delegate that opened the socket
+	 */
 	protected void onConnectionOpened() throws Exception {
 		// Log.d(getClass().getName() + " onConnectionOpened");
 	}
@@ -27,6 +35,9 @@ public class ConnectionDelegate {
 		onReceivedMsg(msg);
 	}
 
+	/**
+	 * Always called when a non-emptpy non-quit msg is received from the client
+	 */
 	protected void onReceivedMsg(String msg) throws Exception {
 		// Log.d(getClass().getName() + " onReceivedMsg( %s )", msg);
 	}
@@ -35,6 +46,9 @@ public class ConnectionDelegate {
 		onReceivedQuit();
 	}
 
+	/**
+	 * Only called if this is the delegate that received the quit msg
+	 */
 	protected void onReceivedQuit() throws Exception {
 		// Log.d(getClass().getName() + " onReceivedQuit");
 	}
@@ -44,6 +58,9 @@ public class ConnectionDelegate {
 		this.mConnection = null;
 	}
 
+	/**
+	 * Always called before the delegate is fully detached and destroyed
+	 */
 	protected void onDetatched() throws Exception {
 		// Log.d(getClass().getName() + " onDetached");
 	}
@@ -101,8 +118,26 @@ public class ConnectionDelegate {
 	}
 
 	public final void writeResponse(String msg, String dataFormat) throws Exception {
-		writeLnMsg("BEGIN format=" + dataFormat + "&length=" + msg.length());
-		writeLnMsg(msg);
+		int length = 0;
+		if (msg != null) {
+			length = msg.length();
+		}
+		writeLnMsg("BEGIN format=" + dataFormat + "&length=" + length);
+		if (msg != null) {
+			writeLnMsg(msg);
+		}
+		writeLnMsg("END");
+	}
+
+	public final void writeResponseWithStatus(String msg, int status, String dataFormat) throws Exception {
+		int length = 0;
+		if (msg != null) {
+			length = msg.length();
+		}
+		writeLnMsg("BEGIN status=" + status + "&format=" + dataFormat + "&length=" + length);
+		if (msg != null) {
+			writeLnMsg(msg);
+		}
 		writeLnMsg("END");
 	}
 

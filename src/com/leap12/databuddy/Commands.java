@@ -9,7 +9,9 @@ import com.leap12.common.props.PropsRead;
 import com.leap12.common.props.PropsReadWrite;
 import com.leap12.common.props.PropsWrite;
 import com.leap12.databuddy.commands.AuthCmd;
+import com.leap12.databuddy.commands.GetCmd;
 import com.leap12.databuddy.commands.HelpCmd;
+import com.leap12.databuddy.commands.PutCmd;
 
 public final class Commands {
 	public static final Comparator<Command<?>> COMMAND_COMPARATOR = new Comparator<Command<?>>() {
@@ -74,64 +76,105 @@ public final class Commands {
 		}
 
 		/**
-		 * <B>Never Throws</b> instead see {@link CmdRequest#getError()} and {@link CmdRequest#getStatus()}
+		 * <B>Never Throws</b> instead see {@link CmdResponse#getError()} and {@link CmdResponse#getStatus()}
 		 * @param connection
 		 * @param msg
 		 * @return
 		 */
-		public abstract CmdRequest<T> parseCommand(BaseConnection connection, String msg);
+		public abstract CmdResponse<T> executeCommand(BaseConnection connection, String msg);
 	}
 
-	public static class CmdRequest<T> {
-		public static enum RequestStatus {
-			SUCCESS(0, "Success"), //
-			FAIL_UNKNOWN(1, "Internal Failure please log a bug."), //
-			FAIL_INVALID_CMD(2, "Invalid Command"), //
-			FAIL_INVALID_CMD_FORMAT(3, "Invalid Command Format"), //
-			FAIL_INVALID_CMD_ARGUMENTS(4, "Invalid Command Arguments"), //
-			FAIL_NOT_AUTHORIZED(5, "Not Authorized"), //
-			;
-
-			private final int mCode;
-			private final String mMessage;
-
-			RequestStatus(int code, String message) {
-				this.mCode = code;
-				this.mMessage = message;
-			}
-
-			public int getCode() {
-				return mCode;
-			}
-
-			public String getMessage() {
-				return mMessage;
-			}
-
-			public static RequestStatus fromCode(int code) {
-				return RequestStatus.values()[code]; // not safe but a hell of a lot more efficient and easier, so I'll be careful I promise.
-			}
+	@SuppressWarnings("serial")
+	public static class DBuddyException extends Exception {
+		public DBuddyException(String msg, Throwable e) {
+			super(msg, e);
 		}
+	}
+
+	@SuppressWarnings("serial")
+	public static class DBuddyFormatException extends DBuddyException {
+		public DBuddyFormatException(String msg, Throwable e) {
+			super(msg, e);
+		}
+	}
+
+	public static class DBuddyArgsException extends DBuddyException {
+		public DBuddyArgsException(String msg, Throwable e) {
+			super(msg, e);
+		}
+	}
+
+	public static RequestStatus toRequestStatus(Throwable e) {
+		if (e instanceof DBuddyArgsException) {
+			return RequestStatus.FAIL_INVALID_CMD_ARGUMENTS;
+		} else if (e instanceof DBuddyException) {
+			return RequestStatus.FAIL_INVALID_CMD_FORMAT;
+		}
+		return RequestStatus.FAIL_UNKNOWN;
+	}
+
+	public static enum RequestStatus {
+		SUCCESS(0, "Success"), //
+		UNFULFILLED(1, "Unfulfilled"), //
+		FAIL_UNKNOWN(2, "Internal Failure please log a bug."), //
+		FAIL_INVALID_CMD(3, "Invalid Command"), //
+		FAIL_INVALID_CMD_FORMAT(4, "Invalid Command Format"), //
+		FAIL_INVALID_CMD_ARGUMENTS(5, "Invalid Command Arguments"), //
+		FAIL_NOT_AUTHORIZED(6, "Not Authorized"), //
+		;
+
+		private static final RequestStatus[] idMap = new RequestStatus[] {
+				SUCCESS, // 0
+				UNFULFILLED, // 1
+				FAIL_UNKNOWN, // 2
+				FAIL_INVALID_CMD, // 3
+				FAIL_INVALID_CMD_FORMAT, // 4
+				FAIL_INVALID_CMD_ARGUMENTS, // 5
+				FAIL_NOT_AUTHORIZED, // 6
+		};
+
+		private final int mCode;
+		private final String mMessage;
+
+		RequestStatus(int code, String message) {
+			this.mCode = code;
+			this.mMessage = message;
+		}
+
+		public int getCode() {
+			return mCode;
+		}
+
+		public String getMessage() {
+			return mMessage;
+		}
+
+		public static RequestStatus fromCode(int code) {
+			return idMap[code];
+		}
+	}
+
+	public static class CmdResponse<T> {
 
 		/**
 		 * Seems cleaner and more flexible than a builder pattern.<br>
 		 * However unlike the builder pattern, validation is the responsibility of the creator (this is intentional).
 		 */
-		public static class CmdRequestMutable<T> extends CmdRequest<T> {
-			public CmdRequestMutable() {
-				super();
+		public static class CmdResponseMutable<T> extends CmdResponse<T> {
+			public CmdResponseMutable(Class<T> type) {
+				super(type);
 			}
 
-			public CmdRequestMutable(T value, RequestStatus status) {
-				super(value, status);
+			public CmdResponseMutable(Class<T> type, T value, RequestStatus status) {
+				super(type, value, status);
 			}
 
-			public CmdRequestMutable(T value, RequestStatus status, Throwable error) {
-				super(value, status, error);
+			public CmdResponseMutable(Class<T> type, T value, RequestStatus status, Throwable error) {
+				super(type, value, status, error);
 			}
 
-			public CmdRequestMutable(T value, RequestStatus status, Throwable error, Props args) {
-				super(value, status, error, args);
+			public CmdResponseMutable(Class<T> type, T value, RequestStatus status, Throwable error, Props args) {
+				super(type, value, status, error, args);
 			}
 
 			public void setValue(T value) {
@@ -180,24 +223,26 @@ public final class Commands {
 		}
 
 		T mValue;
+		Class<T> mType;
 		RequestStatus mStatus;
 		String mStatusMessage;
 		Throwable mError;
 		Props mArgs;
 
-		private CmdRequest() {
-			this(null, RequestStatus.FAIL_UNKNOWN);
+		private CmdResponse(Class<T> type) {
+			this(type, null, RequestStatus.FAIL_UNKNOWN);
 		}
 
-		public CmdRequest(T value, RequestStatus status) {
-			this(value, status, null);
+		public CmdResponse(Class<T> type, T value, RequestStatus status) {
+			this(type, value, status, null);
 		}
 
-		public CmdRequest(T value, RequestStatus status, Throwable error) {
-			this(value, status, error, Props.EMPTY);
+		public CmdResponse(Class<T> type, T value, RequestStatus status, Throwable error) {
+			this(type, value, status, error, Props.EMPTY);
 		}
 
-		public CmdRequest(T value, RequestStatus status, Throwable error, Props args) {
+		public CmdResponse(Class<T> type, T value, RequestStatus status, Throwable error, Props args) {
+			this.mType = type;
 			this.mValue = value;
 			this.mStatus = status;
 			this.mError = error;
@@ -206,6 +251,10 @@ public final class Commands {
 			if (this.mArgs == null) {
 				this.mArgs = Props.EMPTY;
 			}
+		}
+
+		public Class<T> getType() {
+			return mType;
 		}
 
 		public final T getValue() {
@@ -232,6 +281,8 @@ public final class Commands {
 
 	public static final AuthCmd CMD_AUTH = new AuthCmd();
 	public static final HelpCmd CMD_HELP = new HelpCmd();
+	public static final PutCmd CMD_PUT = new PutCmd();
+	public static final GetCmd CMD_GET = new GetCmd();
 
 	private static final Commands self = new Commands();
 

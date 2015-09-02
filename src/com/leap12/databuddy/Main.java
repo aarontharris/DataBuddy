@@ -11,6 +11,7 @@ public class Main {
 					DataBuddy.get().shutdown();
 				}
 			});
+
 			DataBuddy dataBuddy = DataBuddy.get();
 			dataBuddy.startup();
 		} catch (Exception e) {

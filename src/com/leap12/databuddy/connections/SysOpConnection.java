@@ -12,12 +12,13 @@ public class SysOpConnection extends UserConnection {
 
 	@Override
 	protected void onReceivedMsg(String msg) throws Exception {
-		if ("help".equals(msg)) {
-		} else if ("get connection count".equals(msg)) {
+		if ("get connection count".equals(msg)) {
 			int count = DataBuddy.get().getConnectionCount();
 			writeLnMsgSafe(String.valueOf(count));
 		} else if ("gc".equals(msg)) {
 			System.gc();
+		} else {
+			super.onReceivedMsg(msg);
 		}
 	}
 

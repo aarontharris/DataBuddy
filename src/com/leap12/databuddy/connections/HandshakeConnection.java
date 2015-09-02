@@ -3,8 +3,8 @@ package com.leap12.databuddy.connections;
 import com.leap12.common.Log;
 import com.leap12.databuddy.BaseConnection;
 import com.leap12.databuddy.Commands;
-import com.leap12.databuddy.Commands.CmdRequest;
-import com.leap12.databuddy.Commands.CmdRequest.RequestStatus;
+import com.leap12.databuddy.Commands.CmdResponse;
+import com.leap12.databuddy.Commands.RequestStatus;
 import com.leap12.databuddy.Commands.Role;
 
 public class HandshakeConnection extends BaseConnection {
@@ -40,7 +40,7 @@ public class HandshakeConnection extends BaseConnection {
 	 */
 	private UserConnection handleAuthenticateUser(String msg) throws Exception {
 		if (Commands.CMD_AUTH.isCommand(msg)) {
-			CmdRequest<Role> request = Commands.CMD_AUTH.parseCommand(this, msg);
+			CmdResponse<Role> request = Commands.CMD_AUTH.executeCommand(this, msg);
 			if (RequestStatus.SUCCESS == request.getStatus()) {
 
 				// TODO validate user -- maybe send them to the appropriate connection and let that connection do the validation? This would better support an anonymous type
@@ -51,7 +51,7 @@ public class HandshakeConnection extends BaseConnection {
 		throw new Exception("invalid command");
 	}
 
-	private UserConnection toConnection(CmdRequest<Role> request) {
+	private UserConnection toConnection(CmdResponse<Role> request) {
 		Role role = request.getValue();
 		switch (role) {
 		case sysop:

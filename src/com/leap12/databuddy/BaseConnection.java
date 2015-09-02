@@ -8,13 +8,69 @@ import com.leap12.common.ConnectionDelegate;
 import com.leap12.common.Log;
 import com.leap12.common.Pair;
 import com.leap12.common.StrUtl;
-import com.leap12.databuddy.Commands.CmdRequest;
+import com.leap12.databuddy.Commands.CmdResponse;
+import com.leap12.databuddy.Commands.RequestStatus;
+import com.leap12.databuddy.data.Dao;
+import com.leap12.databuddy.data.DataStore;
 
 public class BaseConnection extends ConnectionDelegate {
 
-	public final void writeFailResponse(String msg, CmdRequest<?> request) {
+	private DataStore db;
+
+	/**
+	 * Only available while this delegate is attached to the ClientConnection
+	 */
+	public DataStore getDb() {
+		if (db == null) {
+			db = Dao.getInstance(this);
+		}
+		return db;
+	}
+
+	public final void writeResponse(CmdResponse<?> response) {
 		try {
-			writeResponse(String.format("ERR %s : %s", request.getStatus(), request.getStatusMessage()));
+			if (response != null) {
+				RequestStatus status = response.getStatus();
+				if (status == null) {
+					throw new NullPointerException("Status is null");
+				}
+
+				String value;
+				int statusCode = response.getStatus().getCode();
+
+				if (response != null) {
+					switch (response.getStatus()) {
+					case SUCCESS:
+						if (Void.class.equals(response.getType())) {
+							writeLnMsgSafe("OK");
+						} else {
+							value = response.getValue() == null ? null : String.valueOf(response.getValue());
+							writeResponseWithStatus(value, statusCode, response.getType().getSimpleName());
+						}
+						break;
+					default:
+						value = response.getStatusMessage();
+						if (value == null) {
+							value = response.getError().getMessage();
+						}
+						writeResponseWithStatus(value, statusCode, String.class.getSimpleName());
+						break;
+					}
+				}
+			} else {
+				Log.e(new NullPointerException("Response was null"));
+			}
+		} catch (Exception e) {
+			Log.e(e); // if a failure occurs mid-write, the client will know it didn't receive the full payload and re-request.
+		}
+	}
+	public final void writeErrorResponse(String errMsg, Throwable err) {
+		try {
+			String msg = errMsg;
+			if (msg == null) {
+				msg = err.getMessage();
+			}
+			writeResponseWithStatus(msg, Commands.toRequestStatus(err).getCode(), String.class.getSimpleName());
 		} catch (Exception e) {
 			Log.e(e);
 		}
@@ -84,6 +140,9 @@ public class BaseConnection extends ConnectionDelegate {
 	@Override
 	protected final void doDetatched() throws Exception {
 		super.doDetatched();
+		if (db != null) {
+			Dao.releaseInstance(this);
+		}
 	}
 
 	@Override

@@ -1,12 +1,19 @@
 package com.leap12.databuddy.connections;
 
+import com.leap12.common.Log;
 import com.leap12.databuddy.BaseConnection;
 import com.leap12.databuddy.Commands;
-import com.leap12.databuddy.Commands.CmdRequest;
-import com.leap12.databuddy.Commands.CmdRequest.RequestStatus;
+import com.leap12.databuddy.Commands.CmdResponse;
+import com.leap12.databuddy.Commands.Command;
 import com.leap12.databuddy.Commands.Role;
 
 public class UserConnection extends BaseConnection {
+
+	private static final Command<?>[] commands = new Command[] {
+			Commands.CMD_HELP,
+			Commands.CMD_PUT,
+			Commands.CMD_GET,
+	};
 
 	public Role getRole() {
 		return Role.user;
@@ -18,12 +25,13 @@ public class UserConnection extends BaseConnection {
 
 	@Override
 	protected void onReceivedMsg(String msg) throws Exception {
-		if (Commands.CMD_HELP.isCommand(msg)) {
-			CmdRequest<String> request = Commands.CMD_HELP.parseCommand(this, msg);
-			if (RequestStatus.SUCCESS == request.getStatus()) {
-				writeResponse(request.getValue());
-			} else {
-				writeFailResponse(msg, request);
+		for (Command<?> cmd : commands) {
+			if (cmd.isCommand(msg)) {
+				CmdResponse<?> response = cmd.executeCommand(this, msg);
+				writeResponse(response);
+				if (response.getError() != null) {
+					Log.e(response.getError());
+				}
 			}
 		}
 	}

@@ -1,13 +1,12 @@
 package com.leap12.databuddy;
 
 import java.util.Properties;
-
 import com.leap12.common.props.PropsReadWrite;
 
 public final class Config {
 
 	private static final String KEY_port = "port";
-	private static final int DEF_port = 5309;
+	private static final int DEF_port = 25564;
 	private static final String KEY_lineSeparator = "line.separator"; // no need for default, java comes with one
 
 	private static final Config self = new Config();
