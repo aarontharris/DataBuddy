@@ -8,218 +8,20 @@ import java.util.HashSet;
 import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.leap12.common.Log;
+import com.leap12.common.StrUtl;
 import com.leap12.databuddy.data.DataStore;
 import com.leap12.databuddy.data.DataStoreManager;
 import com.leap12.databuddy.data.ResultSetJSonAdapter;
 
 public class SqliteDataStoreManager implements DataStoreManager {
+	private String mDbName = "dataBuddy.db";
 
-	private static void test() {
-		testConnect();
-		testCreateTable();
-		testInsert();
-		testSelect();
-		testUpdate();
-		testDelete();
-	}
-
-	private static void testConnect() {
-		Connection c = null;
-		try {
-			Class.forName("org.sqlite.JDBC");
-			c = DriverManager.getConnection("jdbc:sqlite:test.db");
-		} catch (Exception e) {
-			System.err.println(e.getClass().getName() + ": " + e.getMessage());
-			System.exit(0);
+	protected SqliteDataStoreManager(String dbName) {
+		if (!StrUtl.isEmpty(dbName)) {
+			mDbName = dbName;
 		}
-		System.out.println("Opened database successfully");
-	}
-
-	private static void testCreateTable() {
-		Connection c = null;
-		Statement stmt = null;
-		try {
-			Class.forName("org.sqlite.JDBC");
-			c = DriverManager.getConnection("jdbc:sqlite:test.db");
-			System.out.println("Opened database successfully");
-
-			stmt = c.createStatement();
-			String sql = "CREATE TABLE COMPANY " +
-					"(ID INT PRIMARY KEY     NOT NULL," +
-					" NAME           TEXT    NOT NULL, " +
-					" AGE            INT     NOT NULL, " +
-					" ADDRESS        CHAR(50), " +
-					" SALARY         REAL)";
-			stmt.executeUpdate(sql);
-			stmt.close();
-			c.close();
-		} catch (Exception e) {
-			System.err.println(e.getClass().getName() + ": " + e.getMessage());
-			System.exit(0);
-		}
-		System.out.println("Table created successfully");
-	}
-
-	private static void testInsert() {
-		Connection c = null;
-		Statement stmt = null;
-		try {
-			Class.forName("org.sqlite.JDBC");
-			c = DriverManager.getConnection("jdbc:sqlite:test.db");
-			c.setAutoCommit(false);
-			System.out.println("Opened database successfully");
-
-			stmt = c.createStatement();
-			String sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) " +
-					"VALUES (1, 'Paul', 32, 'California', 20000.00 );";
-			stmt.executeUpdate(sql);
-
-			sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) " +
-					"VALUES (2, 'Allen', 25, 'Texas', 15000.00 );";
-			stmt.executeUpdate(sql);
-
-			sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) " +
-					"VALUES (3, 'Teddy', 23, 'Norway', 20000.00 );";
-			stmt.executeUpdate(sql);
-
-			sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) " +
-					"VALUES (4, 'Mark', 25, 'Rich-Mond ', 65000.00 );";
-			stmt.executeUpdate(sql);
-
-			stmt.close();
-			c.commit();
-			c.close();
-		} catch (Exception e) {
-			System.err.println(e.getClass().getName() + ": " + e.getMessage());
-			System.exit(0);
-		}
-		System.out.println("Records created successfully");
-	}
-
-	private static void testSelect() {
-		Connection c = null;
-		Statement stmt = null;
-		try {
-			Class.forName("org.sqlite.JDBC");
-			c = DriverManager.getConnection("jdbc:sqlite:test.db");
-			c.setAutoCommit(false);
-			System.out.println("Opened database successfully");
-
-			stmt = c.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM COMPANY;");
-			while (rs.next()) {
-				int id = rs.getInt("id");
-				String name = rs.getString("name");
-				int age = rs.getInt("age");
-				String address = rs.getString("address");
-				float salary = rs.getFloat("salary");
-				System.out.println("ID = " + id);
-				System.out.println("NAME = " + name);
-				System.out.println("AGE = " + age);
-				System.out.println("ADDRESS = " + address);
-				System.out.println("SALARY = " + salary);
-				System.out.println();
-			}
-			rs.close();
-			stmt.close();
-			c.close();
-		} catch (Exception e) {
-			System.err.println(e.getClass().getName() + ": " + e.getMessage());
-			System.exit(0);
-		}
-		System.out.println("Operation done successfully");
-	}
-
-	private static void testUpdate() {
-		Connection c = null;
-		Statement stmt = null;
-		try {
-			Class.forName("org.sqlite.JDBC");
-			c = DriverManager.getConnection("jdbc:sqlite:test.db");
-			c.setAutoCommit(false);
-			System.out.println("Opened database successfully");
-
-			stmt = c.createStatement();
-			String sql = "UPDATE COMPANY set SALARY = 25000.00 where ID=1;";
-			stmt.executeUpdate(sql);
-			c.commit();
-
-			ResultSet rs = stmt.executeQuery("SELECT * FROM COMPANY;");
-			while (rs.next()) {
-				int id = rs.getInt("id");
-				String name = rs.getString("name");
-				int age = rs.getInt("age");
-				String address = rs.getString("address");
-				float salary = rs.getFloat("salary");
-				System.out.println("ID = " + id);
-				System.out.println("NAME = " + name);
-				System.out.println("AGE = " + age);
-				System.out.println("ADDRESS = " + address);
-				System.out.println("SALARY = " + salary);
-				System.out.println();
-			}
-			rs.close();
-			stmt.close();
-			c.close();
-		} catch (Exception e) {
-			System.err.println(e.getClass().getName() + ": " + e.getMessage());
-			System.exit(0);
-		}
-		System.out.println("Operation done successfully");
-	}
-
-	private static void testDelete() {
-		Connection c = null;
-		Statement stmt = null;
-		try {
-			Class.forName("org.sqlite.JDBC");
-			c = DriverManager.getConnection("jdbc:sqlite:test.db");
-			c.setAutoCommit(false);
-			System.out.println("Opened database successfully");
-
-			stmt = c.createStatement();
-			String sql = "DELETE from COMPANY where ID=2;";
-			stmt.executeUpdate(sql);
-			c.commit();
-
-			ResultSet rs = stmt.executeQuery("SELECT * FROM COMPANY;");
-			while (rs.next()) {
-				int id = rs.getInt("id");
-				String name = rs.getString("name");
-				int age = rs.getInt("age");
-				String address = rs.getString("address");
-				float salary = rs.getFloat("salary");
-				System.out.println("ID = " + id);
-				System.out.println("NAME = " + name);
-				System.out.println("AGE = " + age);
-				System.out.println("ADDRESS = " + address);
-				System.out.println("SALARY = " + salary);
-				System.out.println();
-			}
-			rs.close();
-			stmt.close();
-			c.close();
-		} catch (Exception e) {
-			System.err.println(e.getClass().getName() + ": " + e.getMessage());
-			System.exit(0);
-		}
-		System.out.println("Operation done successfully");
-	}
-
-	private static SqliteDataStoreManager self = new SqliteDataStoreManager();
-
-	public static SqliteDataStoreManager getInstance() {
-		return self;
-	}
-
-	private final Gson gson;
-
-	private SqliteDataStoreManager() {
-		gson = new GsonBuilder().create();
 	}
 
 	@Override
@@ -244,11 +46,6 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		}
 	}
 
-	public Gson getGson() {
-		return gson;
-	}
-
-
 	private static final String toQuerySchema(String table) {
 		String format = ""
 				+ "CREATE TABLE %s "
@@ -269,12 +66,17 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		return String.format(format, table, idKey, type.getTypeId(), strVal, intVal, floatVal);
 	}
 
+	private static final String toQueryDelete(String table, String key) {
+		String format = "DELETE * FROM %s WHERE idkey='%s'";
+		return String.format(format, table, key);
+	}
+
 	private static final String toQuerySelect(String table, String key) {
 		String format = "SELECT * FROM %s WHERE idkey='%s'";
 		return String.format(format, table, key);
 	}
 
-	public enum Type {
+	private enum Type {
 		// Careful this order can never change without a data migration
 		// as the ids will be stored in the database and may may the wrong value if changed.
 		BooleanValue(1, "intval", Boolean.class),
@@ -319,7 +121,7 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		}
 	}
 
-	private static class Row {
+	private static class VarType {
 		String key;
 		int type;
 		String textVal;
@@ -330,10 +132,26 @@ public class SqliteDataStoreManager implements DataStoreManager {
 	/** Thread safe */
 	public static class SqliteDataStore implements DataStore {
 		private Connection connection;
-		private final Set<String> knownTables;
+		private final Set<String> knownTables; // TODO: maybe make this a shared resource for all connections?  Beware major concurrency ClusterF
 
 		public SqliteDataStore() {
 			knownTables = new HashSet<>();
+		}
+
+		@Override
+		public void saveString(String topic, String subtopic, String key, String value) throws Exception {
+			String table = toTableName(topic, subtopic);
+			insertOrReplace(table, key, value);
+		}
+
+		@Override
+		public String loadString(String topic, String subtopic, String key) throws Exception {
+			String table = toTableName(topic, subtopic);
+			VarType row = selectOne(table, key, Type.StringValue);
+			if (row != null) {
+				return row.textVal;
+			}
+			return null;
 		}
 
 		private void openConnection(String dbFile) {
@@ -377,13 +195,13 @@ public class SqliteDataStoreManager implements DataStoreManager {
 			return json;
 		}
 
-		private Row selectOne(String table, String key, Type type) throws Exception {
+		private VarType selectOne(String table, String key, Type type) throws Exception {
 			String query = SqliteDataStoreManager.toQuerySelect(table, key);
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
-			Row row = null;
+			VarType row = null;
 			if (rs.next()) {
-				row = new Row();
+				row = new VarType();
 				row.type = rs.getInt("valtype");
 				if (type.getTypeId() == row.type) {
 					switch (type) {
@@ -406,7 +224,7 @@ public class SqliteDataStoreManager implements DataStoreManager {
 			return row;
 		}
 
-		// just synchronize the whole method, it should be very fast except the one time and everyone needs to wait for that anyway
+		// just synchronize the whole method, it should be very fast except the one time and everyone needs to wait for that one anyway
 		private synchronized void ensureTable(String table) throws Exception {
 			if (!knownTables.contains(table)) {
 				Statement stmt = connection.createStatement();
@@ -419,9 +237,9 @@ public class SqliteDataStoreManager implements DataStoreManager {
 					return;
 				}
 
+				// I have confirmed that there is no limit to the number of tables in SQLite (other than physical storage space)
 				stmt.executeUpdate(SqliteDataStoreManager.toQuerySchema(table));
 				stmt.close();
-				//				connection.commit();
 				knownTables.add(table);
 			}
 		}
@@ -429,35 +247,32 @@ public class SqliteDataStoreManager implements DataStoreManager {
 
 		private void update(String query) throws Exception {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate(query);
-			stmt.close();
-			// connection.commit();
+			try {
+				stmt.executeUpdate(query);
+			} finally {
+				stmt.close();
+			}
 		}
 
+		// FIXME: Need to delete rows when value is null to reduce garbage
+		// FIXME: Need to delete table when rows is zero to reduce garbage
+		// FIXME: do it on insertion, or do a full scan periodically?  insertion seems more efficient but more impactful to the user as we can do a full scan off peak hours.
 		private void insertOrReplace(String table, String key, String value) throws Exception {
 			ensureTable(table);
 			String query = SqliteDataStoreManager.toQueryInsert(table, key, Type.StringValue, value, 0, 0f);
 			update(query);
 		}
 
+		private void delete(String table, String key) throws Exception {
+			String query = SqliteDataStoreManager.toQueryDelete(table, key);
+			update(query);
+		}
+
+		// I realize dynamic table naming sounds dangerous but I have confirmed that there is no limit to the number of tables in SQLite (other than physical storage space)
+		// breaking a table name into topic and subtopic should help reduce number of rows per table
+		// and make the data easier for human consumption when topics and subtopics are not user generated.
 		private String toTableName(String topic, String subtopic) {
 			return topic + "_" + subtopic;
-		}
-
-		@Override
-		public void saveString(String topic, String subtopic, String key, String value) throws Exception {
-			String table = toTableName(topic, subtopic);
-			insertOrReplace(table, key, value);
-		}
-
-		@Override
-		public String loadString(String topic, String subtopic, String key) throws Exception {
-			String table = toTableName(topic, subtopic);
-			Row row = selectOne(table, key, Type.StringValue);
-			if (row != null) {
-				return row.textVal;
-			}
-			return null;
 		}
 	}
 }

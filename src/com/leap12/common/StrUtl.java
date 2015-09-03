@@ -183,9 +183,28 @@ public class StrUtl {
 		byte[] data = new byte[readSize];
 		StringBuilder sb = new StringBuilder();
 		while (bIn.read(data, 0, readSize) > 0) {
-			sb.append(new String(data, StandardCharsets.UTF_8));
+			sb.append(toString(data));
 		}
 		return sb.toString();
 	}
 
+	public static final byte[] EMPTY_BYTEPRIM_ARRAY = new byte[0];
+
+	/** UTF-8 */
+	public static byte[] toBytes(String string) {
+		if (isNotEmpty(string)) {
+			return string.getBytes(StandardCharsets.UTF_8);
+		}
+		return EMPTY_BYTEPRIM_ARRAY;
+	}
+
+	/** UTF-8 */
+	public static final String toString(byte[] bytes) {
+		return new String(bytes, StandardCharsets.UTF_8);
+	}
+
+	/** UTF-8 */
+	public static final String toString(byte[] bytes, int offset, int length) {
+		return new String(bytes, offset, length, StandardCharsets.UTF_8);
+	}
 }

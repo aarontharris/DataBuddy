@@ -113,7 +113,7 @@ public class ClientConnection {
 		if (isSocketOpen()) {
 			OutputStream out = socket.getOutputStream();
 			BufferedOutputStream bOut = new BufferedOutputStream(out);
-			bOut.write(msg.getBytes());
+			bOut.write(StrUtl.toBytes(msg));
 			if (appendNewLines == 1) {
 				bOut.write('\n');
 			} else if (appendNewLines > 1) {
@@ -166,12 +166,14 @@ public class ClientConnection {
 
 							handleInactivity(bIn);
 
-							while ((data = bIn.read()) != -1 && data != 10 && data != 13) {
+							// FIXME: will probably hit buffer overflow if we receive a message greater than 1k
+							while ((data = bIn.read()) != -1 && bIn.available() > 0) {
 								bytesRead++;
 								bufferedData[bytesRead - 1] = (byte) data;
 							}
+
 							if (bytesRead > 0) {
-								String msg = new String(bufferedData, 0, bytesRead);
+								String msg = StrUtl.toString(bufferedData, 0, bytesRead);
 								processMessage(msg);
 							}
 						}

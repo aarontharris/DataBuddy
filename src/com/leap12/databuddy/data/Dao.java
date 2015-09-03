@@ -15,6 +15,12 @@ import com.leap12.databuddy.sqlite.SqliteDataStoreManager;
 // 4. Cleanliness, no need to clutter up the SqliteDataStore or its Manager with lockness mosters.
 public final class Dao implements DataStore {
 
+	// By extending it, we expose SqliteDataStoreManagers protected constructor, so only the Dao will secretely create an instance
+	// As we don't really want the SqliteDataStoreManager exposed to the rest of the code base since it's supposed to be a swappable part.
+	// The rest of the code shouldn't care about the DataStoreManager's true backing.
+	private static final DataStoreManager dbFactory = new SqliteDataStoreManager("dbBuddy.db") {
+	};
+
 	private static final Gson gson = new GsonBuilder().create();
 	private static final WeakHashMap<BaseConnection, Dao> daos = new WeakHashMap<>();
 	private static Lock lock = new ReentrantLock();
@@ -25,7 +31,7 @@ public final class Dao implements DataStore {
 		try {
 			Dao dao = daos.get(connection);
 			if (dao == null) {
-				dao = new Dao(SqliteDataStoreManager.getInstance().attainDataStore());
+				dao = new Dao(dbFactory.attainDataStore());
 				daos.put(connection, dao);
 			}
 			return dao;
@@ -33,7 +39,6 @@ public final class Dao implements DataStore {
 			lock.unlock();
 		}
 	}
-
 	/** Thread safe */
 	public static final void releaseInstance(BaseConnection connection) {
 		lock.lock(); // this should be incredibly fast so lets not bother with the reentranceness

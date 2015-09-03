@@ -15,15 +15,23 @@ public class HandshakeConnection extends BaseConnection {
 
 	@Override
 	protected void onReceivedMsg(String msg) throws Exception {
-		try {
-			UserConnection connection = handleAuthenticateUser(msg);
-			getClientConnection().setDelegate(connection);
-		} catch (Exception e) {
-			Log.e(e);
-			// writeLnMsgSafe(e.getMessage());
-			writeResponse(e.getMessage());
-			getClientConnection().stop();
-		}
+		//		try {
+		//			UserConnection connection = handleAuthenticateUser(msg);
+		//			getClientConnection().setDelegate(connection);
+		//		} catch (Exception e) {
+		//			Log.e(e);
+		//			// writeLnMsgSafe(e.getMessage());
+		//			writeResponse(e.getMessage());
+		//			getClientConnection().stop();
+		//		}
+		String output = msg.replace("\n", "N").replace("\r", "R");
+		Log.d(output);
+		writeMsg(""
+				+ "<html>"
+				+ "<body>"
+				+ "<b>Hello World</b>"
+				+ "</body>"
+				+ "</html>");
 	}
 
 	/**
