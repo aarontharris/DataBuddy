@@ -1,5 +1,6 @@
 package com.leap12.databuddy.connections;
 
+import com.leap12.common.ClientConnection;
 import com.leap12.common.Log;
 import com.leap12.databuddy.BaseConnection;
 import com.leap12.databuddy.Commands;
@@ -20,7 +21,9 @@ public class UserConnection extends BaseConnection {
 	}
 
 	@Override
-	protected void onConnectionOpened() throws Exception {
+	protected void onAttached(ClientConnection connection) throws Exception {
+		connection.setInactivityTimeout(0);
+		connection.setKeepAlive(true);
 	}
 
 	@Override

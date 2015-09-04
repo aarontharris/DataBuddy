@@ -4,7 +4,6 @@ import java.util.List;
 
 public class ConnectionDelegate {
 	private ClientConnection mConnection;
-	private long mInactivityTimeoutMillis = 0L;
 
 	protected void doAttached(ClientConnection connection) throws Exception {
 		this.mConnection = connection;
@@ -68,14 +67,6 @@ public class ConnectionDelegate {
 	/** Will return null if the Delegate has been detatched */
 	protected final ClientConnection getClientConnection() {
 		return mConnection;
-	}
-
-	protected final void setInactivityTimeout(long millis) {
-		mInactivityTimeoutMillis = millis;
-	}
-
-	protected final long getInactivityTimeout() {
-		return mInactivityTimeoutMillis;
 	}
 
 	/**

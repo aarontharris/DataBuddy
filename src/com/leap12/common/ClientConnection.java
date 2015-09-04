@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ClientConnection {
@@ -17,6 +18,8 @@ public class ClientConnection {
 	private CopyOnWriteArrayList<WeakReference<ConnectionEventListener>> listeners;
 	private boolean running = false;
 	private String mLineSeparator;
+	private boolean keepAlive = false;
+	private int mInactivityTimeoutMillis = 0;
 
 	public ClientConnection(Socket socket) {
 		this.socket = socket;
@@ -38,6 +41,22 @@ public class ClientConnection {
 		return socket;
 	}
 
+	public void setKeepAlive(boolean keepAlive) {
+		this.keepAlive = keepAlive;
+	}
+
+	public boolean getKeepAlive() {
+		return keepAlive;
+	}
+
+	public int getInactivityTimeout() {
+		return mInactivityTimeoutMillis;
+	}
+
+	public void setInactivityTimeout(int millis) {
+		this.mInactivityTimeoutMillis = millis;
+	}
+
 	public void setDelegate(ConnectionDelegate delegate) {
 		try {
 			if (this.delegate != null) {
@@ -46,7 +65,7 @@ public class ClientConnection {
 		} catch (Exception e) {
 			Log.e(e);
 		}
-		this.delegate = delegate == null ? DEFAULT_DELEGATE : delegate;
+		this.delegate = delegate == null ? DEFAULT_DELEGATE : delegate; // singular transaction, no period of nullness (thread safety)
 		try {
 			if (this.delegate != null) {
 				this.delegate.doAttached(this);
@@ -145,53 +164,102 @@ public class ClientConnection {
 		}
 	}
 
+	private static final int BUF_SIZE = 32;
 	public final void run() {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
+				Log.d("New Connection on Port %s", socket.getPort());
 				try {
 					if (isConnected()) {
 						doConnectionOpened();
 
 						running = true;
-						socket.setKeepAlive(true);
+						socket.setKeepAlive(false);
 
 						InputStream in = socket.getInputStream();
 						BufferedInputStream bIn = new BufferedInputStream(in);
-						byte[] bufferedData = new byte[1024];
+						byte[] inputBuffer = new byte[BUF_SIZE];
 						boolean running = true;
-						while (running) {
-							int bytesRead = 0;
-							int data = 10;
 
-							handleInactivity(bIn);
+						// keepAlive causes the messaging loop to only run once when false
+						// otherwise, it loops to stay alive
+						// browsers or general HTTP GET or PUT should keepAlive=false
+						// gameClient should keepAlive=true
+						while (running) { // keepAlive messaging loop
+							try {
+								if (!isConnected()) {
+									Log.d("NOT CONNECTED");
+									break;
+								}
 
-							// FIXME: will probably hit buffer overflow if we receive a message greater than 1k
-							while ((data = bIn.read()) != -1 && bIn.available() > 0) {
-								bytesRead++;
-								bufferedData[bytesRead - 1] = (byte) data;
-							}
+								Log.d("main loop");
+								int totalBytesRead = 0;
 
-							if (bytesRead > 0) {
-								String msg = StrUtl.toString(bufferedData, 0, bytesRead);
-								processMessage(msg);
+								handleInactivity(bIn);
+
+								boolean more = true;
+								int bytesRead = 0;
+								while (more) { // individual message loop
+									Log.d(" - read loop");
+									bytesRead = bIn.read(inputBuffer, totalBytesRead, BUF_SIZE);
+									if (bytesRead == -1) {
+										running = false;
+										break;
+									}
+									Log.d(" - - read loop got %s", bytesRead);
+									totalBytesRead += bytesRead;
+									more = bIn.available() > 0;
+									// msg = StrUtl.toString(inputBuffer, 0, totalBytesRead);
+
+
+									// we've exceeded the expected common-case optimized limit, lets bulk up, should be a rare case
+									// if not a rare case, then you may want to increase the the inputBuffer size, however this will cost you
+									// more overhead as number of concurrent users increase, so its a trade off
+									// a StringBuiler for this case would have been nice, but there is no way to scale down and I don't
+									// want to construct a new StringBuilder every time.
+									if (more) {
+										if (totalBytesRead + BUF_SIZE > inputBuffer.length) {
+											Log.d("expanding from %s to %s", inputBuffer.length, inputBuffer.length * 2);
+											inputBuffer = Arrays.copyOf(inputBuffer, inputBuffer.length * 2);
+										} else {
+											Log.d("no need to expand read %s of %s", totalBytesRead, inputBuffer.length);
+										}
+									}
+								}
+
+								if (totalBytesRead > 0) {
+									String msg = StrUtl.toString(inputBuffer, 0, totalBytesRead);
+									if (inputBuffer.length > BUF_SIZE) {
+										Log.d("trim down from %s to %s", inputBuffer.length, BUF_SIZE);
+										inputBuffer = Arrays.copyOf(inputBuffer, BUF_SIZE);
+									}
+									processMessage(msg);
+								}
+							} finally {
+								running = running && keepAlive;
 							}
 						}
 					}
-					socket.close();
-				} catch (IOException e) {
-					if (running) {
-						Log.e(e);
-					}
 				} catch (Exception e) {
 					Log.e(e);
+				} finally {
+					try {
+						if (running) {
+							socket.close();
+						}
+					} catch (IOException e) {
+						Log.e(e);
+					}
+					stop();
 				}
+				Log.d("Thread died naturally");
 			}
 		}).start();
 	}
 
 	private void handleInactivity(InputStream in) throws Exception {
-		long timeout = delegate.getInactivityTimeout();
+		long timeout = getInactivityTimeout();
 		if (timeout > 0) {
 			long start = System.currentTimeMillis();
 			while (in.available() == 0) {
@@ -207,7 +275,7 @@ public class ClientConnection {
 
 	private void processMessage(String msg) {
 		try {
-			if ("quit".equals(msg)) {
+			if (msg.startsWith("quit")) {
 				doReceivedQuit();
 			} else {
 				doReceivedMsg(msg);

@@ -3,7 +3,7 @@ package com.leap12.common;
 public class Log {
 
 	public static void d(String format, Object... args) {
-		System.out.println(String.format(format, args));
+		System.out.println(String.format("[" + Thread.currentThread().getId() + "]" + format, args));
 	}
 
 	public static void e(Throwable error, String format, Object... args) {

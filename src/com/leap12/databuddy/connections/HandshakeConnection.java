@@ -1,5 +1,6 @@
 package com.leap12.databuddy.connections;
 
+import com.leap12.common.ClientConnection;
 import com.leap12.common.Log;
 import com.leap12.databuddy.BaseConnection;
 import com.leap12.databuddy.Commands;
@@ -9,29 +10,40 @@ import com.leap12.databuddy.Commands.Role;
 
 public class HandshakeConnection extends BaseConnection {
 
-	public HandshakeConnection() {
-		// setInactivityTimeout(15000);
+	@Override
+	protected void onAttached(ClientConnection connection) throws Exception {
+		connection.setInactivityTimeout(30000);
+		connection.setKeepAlive(false); // we don't know the client protocol yet, could be HTTP or GAME
 	}
 
 	@Override
 	protected void onReceivedMsg(String msg) throws Exception {
-		//		try {
-		//			UserConnection connection = handleAuthenticateUser(msg);
-		//			getClientConnection().setDelegate(connection);
-		//		} catch (Exception e) {
-		//			Log.e(e);
-		//			// writeLnMsgSafe(e.getMessage());
-		//			writeResponse(e.getMessage());
-		//			getClientConnection().stop();
-		//		}
-		String output = msg.replace("\n", "N").replace("\r", "R");
+		String output = msg.replace("\r\n", "\\r\\n_DB_BREAK_");
+		output = output.replace("\r", "\\r_DB_BREAK_");
+		output = output.replace("\n", "\\n_DB_BREAK_");
+		output = output.replace("_DB_BREAK_", "\n");
+
 		Log.d(output);
-		writeMsg(""
-				+ "<html>"
-				+ "<body>"
-				+ "<b>Hello World</b>"
-				+ "</body>"
-				+ "</html>");
+
+		if (Commands.CMD_AUTH.isCommand(msg)) {
+			getClientConnection().setKeepAlive(true);
+			try {
+				UserConnection connection = handleAuthenticateUser(msg);
+				getClientConnection().setDelegate(connection);
+			} catch (Exception e) {
+				Log.e(e);
+				writeResponse(e.getMessage());
+				getClientConnection().stop();
+			}
+		} else if (msg.contains("HTTP")) {
+			getClientConnection().setKeepAlive(false);
+			writeMsg(""
+					+ "<html>"
+					+ "<body>"
+					+ "<b>Hello World</b>"
+					+ "</body>"
+					+ "</html>\r\n\r\n");
+		}
 	}
 
 	/**
@@ -47,16 +59,14 @@ public class HandshakeConnection extends BaseConnection {
 	 * @return Appropriate connection;
 	 */
 	private UserConnection handleAuthenticateUser(String msg) throws Exception {
-		if (Commands.CMD_AUTH.isCommand(msg)) {
-			CmdResponse<Role> request = Commands.CMD_AUTH.executeCommand(this, msg);
-			if (RequestStatus.SUCCESS == request.getStatus()) {
+		CmdResponse<Role> request = Commands.CMD_AUTH.executeCommand(this, msg);
+		if (RequestStatus.SUCCESS == request.getStatus()) {
 
-				// TODO validate user -- maybe send them to the appropriate connection and let that connection do the validation? This would better support an anonymous type
+			// TODO validate user -- maybe send them to the appropriate connection and let that connection do the validation? This would better support an anonymous type
 
-				return toConnection(request);
-			}
+			return toConnection(request);
 		}
-		throw new Exception("invalid command");
+		throw new Exception(request.getError());
 	}
 
 	private UserConnection toConnection(CmdResponse<Role> request) {

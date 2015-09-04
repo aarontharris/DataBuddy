@@ -5,7 +5,6 @@ import java.net.Socket;
 import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
 import com.leap12.common.ClientConnection;
 import com.leap12.common.Log;
 import com.leap12.databuddy.connections.HandshakeConnection;
