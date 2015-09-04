@@ -180,7 +180,7 @@ public class ClientConnection {
 						InputStream in = socket.getInputStream();
 						BufferedInputStream bIn = new BufferedInputStream(in);
 						byte[] inputBuffer = new byte[BUF_SIZE];
-						boolean running = true;
+						//						boolean running = true;
 
 						// keepAlive causes the messaging loop to only run once when false
 						// otherwise, it loops to stay alive
@@ -234,21 +234,31 @@ public class ClientConnection {
 										Log.d("trim down from %s to %s", inputBuffer.length, BUF_SIZE);
 										inputBuffer = Arrays.copyOf(inputBuffer, BUF_SIZE);
 									}
+									Log.d("running before processMessage = %s", running);
 									processMessage(msg);
+									Log.d("running after  processMessage = %s", running);
 								}
 							} finally {
+								Log.d("running before finally = %s", running);
 								running = running && keepAlive;
+								Log.d("running after  finally = %s", running);
 							}
 						}
+					}
+				} catch (IOException e) {
+					if (!running) {
+						Log.e("IOException while not running likely connection timeout");
+					} else {
+						Log.e("IOException while running not sure why, client terminated?");
+						Log.e(e);
 					}
 				} catch (Exception e) {
 					Log.e(e);
 				} finally {
 					try {
-						if (running) {
-							socket.close();
-						}
+						socket.close();
 					} catch (IOException e) {
+						Log.e("IOException while closing socket, running = " + running);
 						Log.e(e);
 					}
 					stop();
@@ -257,7 +267,6 @@ public class ClientConnection {
 			}
 		}).start();
 	}
-
 	private void handleInactivity(InputStream in) throws Exception {
 		long timeout = getInactivityTimeout();
 		if (timeout > 0) {
