@@ -20,6 +20,7 @@ public class ClientConnection {
 	private String mLineSeparator;
 	private boolean keepAlive = false;
 	private int mInactivityTimeoutMillis = 0;
+	private int mInactivityPollIntervalMillis = 500;
 
 	public ClientConnection(Socket socket) {
 		this.socket = socket;
@@ -55,6 +56,26 @@ public class ClientConnection {
 
 	public void setInactivityTimeout(int millis) {
 		this.mInactivityTimeoutMillis = millis;
+	}
+
+	public int getInactivityPollInterval() {
+		return mInactivityPollIntervalMillis;
+	}
+
+	/**
+	 * When a client sitting idle during the handshake phase, we will loop and check for activity.<br>
+	 * 0 millis would eat up the CPU until the inactivityTimeout occurred.<BR>
+	 * 1000 millis would seem sluggishly responsive to the user during the handshake<br>
+	 * Ideal is something imperceivably fast but slow enough to not eat up CPU.<br>
+	 * Again, this is ONLY during handshake, after that whether a browser or game client, its immediate after that as it instead blocks on I/O.<br>
+	 * 500ms is default<br>
+	 * @param millis
+	 */
+	public void setInactivityPollInterval(int millis) {
+		if (millis < 1) {
+			throw new IllegalArgumentException("Can't travel back in time");
+		}
+		this.mInactivityPollIntervalMillis = millis;
 	}
 
 	public void setDelegate(ConnectionDelegate delegate) {
@@ -186,13 +207,8 @@ public class ClientConnection {
 						// otherwise, it loops to stay alive
 						// browsers or general HTTP GET or PUT should keepAlive=false
 						// gameClient should keepAlive=true
-						while (running) { // keepAlive messaging loop
+						while (isSocketOpen()) { // keepAlive messaging loop
 							try {
-								if (!isConnected()) {
-									Log.d("NOT CONNECTED");
-									break;
-								}
-
 								Log.d("main loop");
 								int totalBytesRead = 0;
 
@@ -207,7 +223,9 @@ public class ClientConnection {
 										running = false;
 										break;
 									}
-									Log.d(" - - read loop got %s", bytesRead);
+
+									// Thread.sleep(1000);
+
 									totalBytesRead += bytesRead;
 									more = bIn.available() > 0;
 									// msg = StrUtl.toString(inputBuffer, 0, totalBytesRead);
@@ -234,14 +252,10 @@ public class ClientConnection {
 										Log.d("trim down from %s to %s", inputBuffer.length, BUF_SIZE);
 										inputBuffer = Arrays.copyOf(inputBuffer, BUF_SIZE);
 									}
-									Log.d("running before processMessage = %s", running);
 									processMessage(msg);
-									Log.d("running after  processMessage = %s", running);
 								}
 							} finally {
-								Log.d("running before finally = %s", running);
 								running = running && keepAlive;
-								Log.d("running after  finally = %s", running);
 							}
 						}
 					}
@@ -277,7 +291,7 @@ public class ClientConnection {
 				if (delta > timeout) {
 					ClientConnection.this.stop();
 				}
-				Thread.sleep(20);
+				Thread.sleep(getInactivityPollInterval());
 			}
 		}
 	}

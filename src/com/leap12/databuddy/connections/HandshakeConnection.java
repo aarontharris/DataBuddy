@@ -38,7 +38,7 @@ public class HandshakeConnection extends BaseConnection {
 		} else if (msg.contains("HTTP")) {
 			getClientConnection().setKeepAlive(false);
 			writeMsg(""
-					+ "Content-type: text/html\n\n"
+					//					+ "Content-type: text/html\n\n"
 					+ "<html>"
 					+ "<body>"
 					+ "<b>Hello World</b>"
