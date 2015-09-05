@@ -65,7 +65,7 @@ public class ConnectionDelegate {
 	}
 
 	/** Will return null if the Delegate has been detatched */
-	protected final ClientConnection getClientConnection() {
+	public final ClientConnection getClientConnection() {
 		return mConnection;
 	}
 

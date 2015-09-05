@@ -12,6 +12,7 @@ import com.leap12.databuddy.commands.AuthCmd;
 import com.leap12.databuddy.commands.GetCmd;
 import com.leap12.databuddy.commands.HelpCmd;
 import com.leap12.databuddy.commands.PutCmd;
+import com.leap12.databuddy.commands.RelayCmd;
 
 public final class Commands {
 	public static final Comparator<Command<?>> COMMAND_COMPARATOR = new Comparator<Command<?>>() {
@@ -22,7 +23,7 @@ public final class Commands {
 	};
 
 	public static enum Role {
-		user, sysop, ;
+		user, sysop;
 
 		public String toValue() {
 			return this.name();
@@ -283,6 +284,7 @@ public final class Commands {
 	public static final HelpCmd CMD_HELP = new HelpCmd();
 	public static final PutCmd CMD_PUT = new PutCmd();
 	public static final GetCmd CMD_GET = new GetCmd();
+	public static final RelayCmd CMD_RELAY = new RelayCmd();
 
 	private static final Commands self = new Commands();
 

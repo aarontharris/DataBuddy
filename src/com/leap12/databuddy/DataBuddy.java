@@ -2,6 +2,7 @@ package com.leap12.databuddy;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -99,6 +100,17 @@ public final class DataBuddy {
 			}
 		}
 		return count;
+	}
+
+	public void relayMessage(String message, ClientConnection src) {
+		Set<ClientConnection> connections = this.connections.keySet();
+		for (ClientConnection conn : connections) {
+			if (!src.equals(conn)) {
+				if (conn.isSocketOpen()) {
+					conn.writeLnMsgSafe(message);
+				}
+			}
+		}
 	}
 
 }

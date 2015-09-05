@@ -8,13 +8,10 @@ import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.Command;
 import com.leap12.databuddy.Commands.Role;
 
-public class UserConnection extends BaseConnection {
+public class RelayConnection extends BaseConnection {
 
 	private static final Command<?>[] commands = new Command[] {
-			Commands.CMD_HELP,
-			Commands.CMD_PUT,
-			Commands.CMD_GET,
-			Commands.CMD_RELAY,
+			Commands.CMD_RELAY
 	};
 
 	public Role getRole() {
@@ -29,12 +26,6 @@ public class UserConnection extends BaseConnection {
 
 	@Override
 	protected void onReceivedMsg(String msg) throws Exception {
-		String output = msg.replace("\r\n", "\\r\\n_DB_BREAK_");
-		output = output.replace("\r", "\\r_DB_BREAK_");
-		output = output.replace("\n", "\\n_DB_BREAK_");
-		output = output.replace("_DB_BREAK_", "\n");
-		Log.d(output);
-
 		for (Command<?> cmd : commands) {
 			if (cmd.isCommand(msg)) {
 				CmdResponse<?> response = cmd.executeCommand(this, msg);

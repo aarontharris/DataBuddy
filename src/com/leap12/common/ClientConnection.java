@@ -21,6 +21,7 @@ public class ClientConnection {
 	private boolean keepAlive = false;
 	private int mInactivityTimeoutMillis = 0;
 	private int mInactivityPollIntervalMillis = 500;
+	private BufferedInputStream bIn;
 
 	public ClientConnection(Socket socket) {
 		this.socket = socket;
@@ -185,7 +186,8 @@ public class ClientConnection {
 		}
 	}
 
-	private static final int BUF_SIZE = 32;
+	// FIXME: Test when the client application dies unexpectedly, do we detect and close?  do we need an inactivity failsafe for the authorized state?
+	private static final int BUF_SIZE = 1024;
 	public final void run() {
 		new Thread(new Runnable() {
 			@Override
@@ -199,7 +201,7 @@ public class ClientConnection {
 						socket.setKeepAlive(false);
 
 						InputStream in = socket.getInputStream();
-						BufferedInputStream bIn = new BufferedInputStream(in);
+						bIn = new BufferedInputStream(in);
 						byte[] inputBuffer = new byte[BUF_SIZE];
 						//						boolean running = true;
 
@@ -232,16 +234,11 @@ public class ClientConnection {
 
 
 									// we've exceeded the expected common-case optimized limit, lets bulk up, should be a rare case
-									// if not a rare case, then you may want to increase the the inputBuffer size, however this will cost you
-									// more overhead as number of concurrent users increase, so its a trade off
-									// a StringBuiler for this case would have been nice, but there is no way to scale down and I don't
-									// want to construct a new StringBuilder every time.
+									// if not a rare case, then you may want to increase BUF_SIZE, however this will cost you
+									// more overhead as the number of concurrent users increase, so its a trade off
 									if (more) {
 										if (totalBytesRead + BUF_SIZE > inputBuffer.length) {
-											Log.d("expanding from %s to %s", inputBuffer.length, inputBuffer.length * 2);
 											inputBuffer = Arrays.copyOf(inputBuffer, inputBuffer.length * 2);
-										} else {
-											Log.d("no need to expand read %s of %s", totalBytesRead, inputBuffer.length);
 										}
 									}
 								}
@@ -270,7 +267,8 @@ public class ClientConnection {
 					Log.e(e);
 				} finally {
 					try {
-						socket.close();
+						socket.close(); // closes input stream
+						bIn.close();
 					} catch (IOException e) {
 						Log.e("IOException while closing socket, running = " + running);
 						Log.e(e);
@@ -369,6 +367,7 @@ public class ClientConnection {
 		}
 		running = false;
 		socket.close();
+		bIn.close();
 	}
 
 	private boolean isConnected() {
