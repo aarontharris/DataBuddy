@@ -23,17 +23,13 @@ public class UserConnection extends BaseConnection {
 
 	@Override
 	protected void onAttached(ClientConnection connection) throws Exception {
-		connection.setInactivityTimeout(0);
+		connection.setInactivityTimeout(120000); // 2 minute -- TODO: client will need to detect disconnect and reconnect.
 		connection.setKeepAlive(true);
 	}
 
 	@Override
 	protected void onReceivedMsg(String msg) throws Exception {
-		String output = msg.replace("\r\n", "\\r\\n_DB_BREAK_");
-		output = output.replace("\r", "\\r_DB_BREAK_");
-		output = output.replace("\n", "\\n_DB_BREAK_");
-		output = output.replace("_DB_BREAK_", "\n");
-		Log.d(output);
+		logDebugMessageWithNewlineChars(msg);
 
 		for (Command<?> cmd : commands) {
 			if (cmd.isCommand(msg)) {
