@@ -27,6 +27,17 @@ public class BaseConnection extends ConnectionDelegate {
 		return db;
 	}
 
+	/**
+	 * Shows the message with newLine characters \r and \n exposed for debugging
+	 */
+	protected void logDebugMessageWithNewlineChars(String msg) {
+		String output = msg.replace("\r\n", "\\r\\n_DB_BREAK_");
+		output = output.replace("\r", "\\r_DB_BREAK_");
+		output = output.replace("\n", "\\n_DB_BREAK_");
+		output = output.replace("_DB_BREAK_", "\n");
+		Log.d(output);
+	}
+
 	public final void writeResponse(CmdResponse<?> response) {
 		try {
 			if (response != null) {

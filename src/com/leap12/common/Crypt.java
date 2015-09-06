@@ -1,127 +1,139 @@
 package com.leap12.common;
 
-import java.security.Key;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
-import org.apache.commons.codec.binary.Base64;
 
+/**
+ * Since this project is open source, the security implementation should be developed privately. This class is to help you encrypt and decrypt
+ * messages but you'll need to decide the handshake and encryption logic for yourself. Be Careful! Default implementation is clear text.
+ */
 public class Crypt {
 
 	public static void main(String[] args) throws Exception {
-		String username = "bob@google.org";
-		String password = "Password1";
-		String secretId = "BlahBlahBlah";
-		String SALT2 = "deliciously salty"; // TODO make random
+		test();
+	}
 
-		// salt ?
-		//		final Random r = new SecureRandom();
-		//		byte[] salt = new byte[32];
-		//		r.nextBytes(salt);
-		//		/** String encodedSalt = Base64.encodeBase64String(salt); */
+	private static void test() throws Exception {
+		Crypt crypt = new Crypt();
 
-		// Get the Key
-		byte[] key = (SALT2 + username + password).getBytes();
-		System.out.println(key.length);
 
+		try {
+			String SALT = "shouldBeSomethingRandom";
+			String user, pass, inMsg, outMsg, keyPhrase;
+			byte[] encMsg;
+
+			user = "aaron";
+			pass = "harris";
+			inMsg = "Hello World";
+			keyPhrase = user + pass + SALT;
+
+			encMsg = crypt.encryptString(keyPhrase, inMsg);
+			outMsg = crypt.decryptString(keyPhrase, encMsg);
+
+			Log.d("'%s', '%s', '%s', '%s', matched=%s", user, pass, inMsg, outMsg, inMsg.equals(outMsg));
+		} catch (BadPaddingException e) {
+			Log.e("Invalid Username or Password");
+		}
+	}
+
+	private final Charset mCharSet;
+
+	/** Uses {@link StandardCharsets#UTF_8} by default */
+	public Crypt() {
+		this(StandardCharsets.UTF_8);
+	}
+
+	/** @see {@link StandardCharsets} */
+	public Crypt(Charset charSet) {
+		this.mCharSet = charSet;
+	}
+
+	private SecretKeySpec getKey(String keyPhrase) throws NoSuchAlgorithmException {
+		byte[] key = (keyPhrase).getBytes(mCharSet);
+
+		// 10ms the first time
 		MessageDigest sha = MessageDigest.getInstance("SHA-1"); // FIXME: SHA-2 ?
 		key = sha.digest(key);
 		key = Arrays.copyOf(key, 16); // use only first 128 bit
 
-		// Generate the secret key specs.
 		SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+		return secretKeySpec;
+	}
 
-		// Instantiate the cipher
-		Cipher cipher = Cipher.getInstance("AES");
-		//			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+	/**
+	 * @param keyPhrase Used to generate the encryption/decryption key. Maybe a password or username and password and salt combo?
+	 * @param unencryptedMessage The message you wish to encrypt
+	 * @return The encrypted byte-array form of the given unencryptedMessage.
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 */
+	public byte[] encrypt(String keyPhrase, byte[] unencryptedMessage) throws
+			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+		SecretKeySpec secretKeySpec = getKey(keyPhrase);
+		Cipher cipher = Cipher.getInstance("AES"); // says getInstance(), means newInstance()
 		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-		byte[] encryptedBytes = cipher.doFinal(secretId.getBytes());
-		String encryptedString = new String(encryptedBytes); // StrUtl.toString(encryptedBytes);
-		Log.d("Before Encrypt  %s", secretId);
-		Log.d("After  Encrypt  %s", encryptedString);
-
-
-		byte[] encryptedBytes2 = encryptedBytes; // encryptedString.getBytes(); // StrUtl.toBytes(encryptedString);
-
-		Log.d("Length %s vs %s", encryptedBytes.length, encryptedBytes2.length);
-
-
-		Cipher cipher2 = Cipher.getInstance("AES");
-		cipher2.init(Cipher.DECRYPT_MODE, secretKeySpec);
-		byte[] originalBytes = cipher2.doFinal(encryptedBytes2);
-		String originalString = new String(originalBytes);
-		Log.d("Original String: %s", originalString);
-		Log.d("After  Decrypt  %s");
+		byte[] encryptedMessage = cipher.doFinal(unencryptedMessage);
+		return encryptedMessage;
 	}
 
-	//	public static class CryptoSecurity {
-
-	public static String key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-	public static byte[] key_Array = Base64.decodeBase64(key);
-
-	public static String encrypt(String strToEncrypt)
-	{
-		try
-		{
-			//Cipher _Cipher = Cipher.getInstance("AES");
-			//Cipher _Cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
-			Cipher _Cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-
-			// Initialization vector.   
-			// It could be any value or generated using a random number generator.
-			byte[] iv = { 1, 2, 3, 4, 5, 6, 6, 5, 4, 3, 2, 1, 7, 7, 7, 7 };
-			IvParameterSpec ivspec = new IvParameterSpec(iv);
-
-			Key SecretKey = new SecretKeySpec(key_Array, "AES");
-			_Cipher.init(Cipher.ENCRYPT_MODE, SecretKey, ivspec);
-
-			return Base64.encodeBase64String(_Cipher.doFinal(strToEncrypt.getBytes()));
-		} catch (Exception e)
-		{
-			System.out.println("[Exception]:" + e.getMessage());
-		}
-		return null;
+	/**
+	 * @param keyPhrase Used to generate the encryption/decryption key. Maybe a password or username and password and salt combo?
+	 * @param unencryptedMessage The message you wish to encrypt
+	 * @return The encrypted byte-array form of the given unencryptedMessage.
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 */
+	public byte[] encryptString(String keyPhrase, String unencryptedMessage) throws
+			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+		return encrypt(keyPhrase, unencryptedMessage.getBytes(mCharSet));
 	}
 
-	public static String decrypt(String EncryptedMessage) {
-		try {
-			//Cipher _Cipher = Cipher.getInstance("AES");
-			//Cipher _Cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
-			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-
-			// Initialization vector.   
-			// It could be any value or generated using a random number generator.
-			byte[] iv = { 1, 2, 3, 4, 5, 6, 6, 5, 4, 3, 2, 1, 7, 7, 7, 7 };
-			IvParameterSpec ivspec = new IvParameterSpec(iv);
-
-			Key SecretKey = new SecretKeySpec(key_Array, "AES");
-			cipher.init(Cipher.DECRYPT_MODE, SecretKey, ivspec);
-
-			byte DecodedMessage[] = Base64.decodeBase64(EncryptedMessage);
-			return new String(cipher.doFinal(DecodedMessage));
-
-		} catch (Exception e) {
-			System.out.println("[Exception]:" + e.getMessage());
-
-		}
-		return null;
+	/**
+	 * @param keyPhrase Used to generate the encryption/decryption key. Maybe a password or username and password and salt combo?
+	 * @param encryptedMessage The message you wish to decrypt
+	 * @return The decrypted byte-array form of the given encryptedMessage.
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 */
+	public byte[] decrypt(String keyPhrase, byte[] encryptedMessage) throws
+			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+		SecretKeySpec secretKeySpec = getKey(keyPhrase);
+		Cipher cipher = Cipher.getInstance("AES"); // says getInstance(), means newInstance()
+		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
+		byte[] unencryptedmessage = cipher.doFinal(encryptedMessage);
+		return unencryptedmessage;
 	}
 
-	public static void xmain(String[] args) {
-		// TODO Auto-generated method stub
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("xml file string ...");
-
-		String outputOfEncrypt = encrypt(sb.toString());
-		System.out.println("[CryptoSecurity.outputOfEncrypt]:" + outputOfEncrypt);
-
-		String outputOfDecrypt = decrypt(outputOfEncrypt);
-		//String outputOfDecrypt = decrypt(sb.toString());        
-		System.out.println("[CryptoSecurity.outputOfDecrypt]:" + outputOfDecrypt);
+	/**
+	 * @param keyPhrase Used to generate the encryption/decryption key. Maybe a password or username and password and salt combo?
+	 * @param encryptedMessage The message you wish to decrypt
+	 * @return The decrypted string form of the given encryptedMessage.
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 */
+	public String decryptString(String keyPhrase, byte[] encryptedMessage) throws
+			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+		return new String(decrypt(keyPhrase, encryptedMessage), mCharSet);
 	}
-
-	//}
 }

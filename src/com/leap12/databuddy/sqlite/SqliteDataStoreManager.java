@@ -2,6 +2,7 @@ package com.leap12.databuddy.sqlite;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashSet;
@@ -53,6 +54,7 @@ public class SqliteDataStoreManager implements DataStoreManager {
 				+ "  idkey          TEXT PRIMARY KEY NOT NULL, "
 				+ "  valtype        INT NOT NULL, "
 				+ "  textval        TEXT, "
+				+ "  blobval        BLOB, "
 				+ "  intval         INT, "
 				+ "  floatval       REAL "
 				+ ")";
@@ -61,9 +63,16 @@ public class SqliteDataStoreManager implements DataStoreManager {
 
 	private static final String toQueryInsert(String table, String idKey, Type type, String strVal, int intVal, float floatVal) {
 		String format = "INSERT OR REPLACE INTO %s "
-				+ "(idkey,valtype,textval,intval,floatval) VALUES "
+				+ "(idkey,valtype,textval,blobvalintval,floatval) VALUES "
 				+ "('%s', %s, '%s', %s, %s );";
 		return String.format(format, table, idKey, type.getTypeId(), strVal, intVal, floatVal);
+	}
+
+	private static final String toQueryInsertBind(String table) {
+		String format = "INSERT OR REPLACE INTO " + table + " "
+				+ "(idkey,valtype,textval,blobval,intval,floatval) VALUES "
+				+ "(?,?,?,?,?,?);";
+		return format;
 	}
 
 	private static final String toQueryDelete(String table, String key) {
@@ -83,7 +92,8 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		IntegerValue(2, "intval", Integer.class),
 		FloatValue(3, "floatval", Float.class),
 		StringValue(4, "textval", String.class),
-		JsonValue(5, "textval", JsonObject.class);
+		BlobValue(5, "blobval", String.class),
+		JsonValue(6, "textval", JsonObject.class);
 
 		private static final Type[] idMap = new Type[] {
 				// ZERO is invalid
@@ -91,7 +101,8 @@ public class SqliteDataStoreManager implements DataStoreManager {
 				IntegerValue, // 2
 				FloatValue, //   3
 				StringValue, //  4
-				JsonValue, //    5
+				BlobValue, //    5
+				JsonValue, //    6
 		};
 
 		private int typeId;
@@ -125,6 +136,7 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		String key;
 		int type;
 		String textVal;
+		byte[] blobVal;
 		int intVal;
 		float floatVal;
 	}
@@ -152,6 +164,70 @@ public class SqliteDataStoreManager implements DataStoreManager {
 				return row.textVal;
 			}
 			return null;
+		}
+
+		@Override
+		public void saveBlob(String topic, String subtopic, String key, byte[] value) throws Exception {
+			String table = toTableName(topic, subtopic);
+			insertOrReplace(table, Type.BlobValue, key, null, value, 0, 0f);
+		}
+
+		@Override
+		public byte[] loadBlob(String topic, String subtopic, String key) throws Exception {
+			String table = toTableName(topic, subtopic);
+			VarType row = selectOne(table, key, Type.BlobValue);
+			if (row != null) {
+				return row.blobVal;
+			}
+			return null;
+		}
+
+		@Override
+		public void saveInt(String topic, String subtopic, String key, int value) throws Exception {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException("Not Implemented");
+		}
+
+		@Override
+		public int loadInt(String topic, String subtopic, String key) throws Exception {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException("Not Implemented");
+		}
+
+		@Override
+		public void saveBoolean(String topic, String subtopic, String key, boolean value) throws Exception {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException("Not Implemented");
+		}
+
+		@Override
+		public boolean loadBoolean(String topic, String subtopic, String key) throws Exception {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException("Not Implemented");
+		}
+
+		@Override
+		public void saveFloat(String topic, String subtopic, String key, byte[] value) throws Exception {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException("Not Implemented");
+		}
+
+		@Override
+		public float loadFloat(String topic, String subtopic, String key) throws Exception {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException("Not Implemented");
+		}
+
+		@Override
+		public void saveJSONObject(String topic, String subtopic, String key, JSONObject value) throws Exception {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException("Not Implemented");
+		}
+
+		@Override
+		public JSONObject loadJSONObject(String topic, String subtopic, String key) throws Exception {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException("Not Implemented");
 		}
 
 		private void openConnection(String dbFile) {
@@ -205,8 +281,19 @@ public class SqliteDataStoreManager implements DataStoreManager {
 				row.type = rs.getInt("valtype");
 				if (type.getTypeId() == row.type) {
 					switch (type) {
+					case BlobValue:
+						row.blobVal = rs.getBytes(type.getFieldName());
+						break;
 					case StringValue:
+					case JsonValue:
 						row.textVal = rs.getString(type.getFieldName());
+						break;
+					case IntegerValue:
+					case BooleanValue:
+						row.intVal = rs.getInt(type.getFieldName());
+						break;
+					case FloatValue:
+						row.floatVal = rs.getFloat(type.getFieldName());
 						break;
 					default:
 						throw new UnsupportedOperationException(type + " not yet supported");
@@ -260,6 +347,22 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		private void insertOrReplace(String table, String key, String value) throws Exception {
 			ensureTable(table);
 			String query = SqliteDataStoreManager.toQueryInsert(table, key, Type.StringValue, value, 0, 0f);
+			update(query);
+		}
+
+		private void insertOrReplace(String table, Type type, String key,
+				String textVal, byte[] byteVal, int intVal, float floatVal)
+				throws Exception {
+			ensureTable(table);
+			String query = SqliteDataStoreManager.toQueryInsertBind(table);
+			PreparedStatement stmt = connection.prepareStatement(query);
+			stmt.setString(1, key);
+			stmt.setInt(2, type.typeId);
+			stmt.setString(3, textVal);
+			stmt.setBytes(4, byteVal);
+			stmt.setInt(5, intVal);
+			stmt.setFloat(6, floatVal);
+			stmt.executeUpdate(query);
 			update(query);
 		}
 

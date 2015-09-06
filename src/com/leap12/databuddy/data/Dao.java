@@ -3,6 +3,7 @@ package com.leap12.databuddy.data;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import org.json.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.leap12.databuddy.BaseConnection;
@@ -63,6 +64,56 @@ public final class Dao implements DataStore {
 	@Override
 	public String loadString(String topic, String subtopic, String key) throws Exception {
 		return mDataStore.loadString(topic, subtopic, key);
+	}
+	@Override
+	public void saveBlob(String topic, String subtopic, String key, byte[] value) throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+	@Override
+	public byte[] loadBlob(String topic, String subtopic, String key) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public void saveInt(String topic, String subtopic, String key, int value) throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+	@Override
+	public int loadInt(String topic, String subtopic, String key) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public void saveBoolean(String topic, String subtopic, String key, boolean value) throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+	@Override
+	public boolean loadBoolean(String topic, String subtopic, String key) throws Exception {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	@Override
+	public void saveFloat(String topic, String subtopic, String key, byte[] value) throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+	@Override
+	public float loadFloat(String topic, String subtopic, String key) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public void saveJSONObject(String topic, String subtopic, String key, JSONObject value) throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+	@Override
+	public JSONObject loadJSONObject(String topic, String subtopic, String key) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

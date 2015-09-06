@@ -18,13 +18,9 @@ public class HandshakeConnection extends BaseConnection {
 
 	@Override
 	protected void onReceivedMsg(String msg) throws Exception {
-		String output = msg.replace("\r\n", "\\r\\n_DB_BREAK_");
-		output = output.replace("\r", "\\r_DB_BREAK_");
-		output = output.replace("\n", "\\n_DB_BREAK_");
-		output = output.replace("_DB_BREAK_", "\n");
+		logDebugMessageWithNewlineChars(msg);
 
-		Log.d(output);
-
+		// If we are a proper auth command, then deal with it
 		if (Commands.CMD_AUTH.isCommand(msg)) {
 			getClientConnection().setKeepAlive(true);
 			try {
@@ -35,13 +31,16 @@ public class HandshakeConnection extends BaseConnection {
 				writeResponse(e.getMessage());
 				getClientConnection().stop();
 			}
-		} else if (msg.contains("HTTP")) {
+		}
+
+		// Apparently we didn't get an auth cmd, if its a HTTP request, lets try to deal with it just for fun
+		else if (msg.contains("HTTP")) {
 			getClientConnection().setKeepAlive(false);
 			writeMsg(""
-					//					+ "Content-type: text/html\n\n"
+					// + "Content-type: text/html\n\n"
 					+ "<html>"
 					+ "<body>"
-					+ "<b>Hello World</b>"
+					+ "<b>Boo... I'm a webserver...</b>"
 					+ "</body>"
 					+ "</html>\r\n\r\n");
 		}
@@ -63,7 +62,8 @@ public class HandshakeConnection extends BaseConnection {
 		CmdResponse<Role> request = Commands.CMD_AUTH.executeCommand(this, msg);
 		if (RequestStatus.SUCCESS == request.getStatus()) {
 
-			// TODO validate user -- maybe send them to the appropriate connection and let that connection do the validation? This would better support an anonymous type
+			// TODO validate user -- maybe send them to the appropriate connection and let that connection do the validation? This would better
+			// support an anonymous type
 
 			return toConnection(request);
 		}
