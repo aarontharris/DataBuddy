@@ -60,12 +60,21 @@ Given that I use this in Unity, there should no doubt be some progress on a C# C
 How to implement
 ======
 
+Open the project in eclipse, run Main.java then
+`
+telnet localhost 25564
+`
+
 The project code as it is now, is sort of in a testing state for ease of development.  I'm sort of developing it as I go for the needs of my own project and abstracting away for general use.  My specific bits are not committed here so I apologize if some of the code appears fragmented.  However it is always in a debugging runnable state in the form of a pseudo-sample implementation.  Having said that, here's some key places to look to plug in your own bits.
 
 - DataBuddy.java - The face of the server.  It greets the client and quickly delegates off to the ClientConnection.
   - The main connection listen loop runs here in the main thread.
   - Since this is the core of the server, commands that involve other connections pass through here, commands such as relaying messages from one client to another.  Client-A must identify Client-B via DataBuddy as DataBuddy is the parent and knows all its children, but Client-A and Client-B are siblings and are not directly aware of eachother.  Binding clients is not advisable as connections can be lost at any time.  Best practice is to associate a client to a user or session and ask DataBuddy (the parent) to find the client-sibling by name (user or session, etc) for safety.
 - ClientConnection.java - The heart[s] of the server.  Each client gets its own instance running in its own thread.
-- ConnectionDelegate.java - Your interface and customization to how the client should handle received messages.
+  - This class is the root of the client instance, but your interraction with it should be minimal as there is an abstraction provided to allow you to create various "modes" of operation
+- ConnectionDelegate.java - The hands of the server. Your customizeable interface to the ClientConnection.
+  - Here you control how to deal with received messages.
+  - Currently there are some example User or Sysop ConnectionDelegates that get launched based on the user's login.
+  - When the ClientConnection first launches, it starts in the Handshake ConnectionDelegate called HandshakeConnection.  This connection authenticates the user and if successful tells the ClientConnection to switch modes from the HandshakeConnection to the UserConnection or SystemConnection.  From there the ClientConnection blocks its thread waiting for I/O.
 
 Please feel free to contact me if you want to know more.
