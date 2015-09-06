@@ -5,8 +5,24 @@ Its a datastore that aims to be ultra portable, lightweight and very powerful.
 
 It can be bundled up with your desktop application or deployed on a server.
 
+<b>Index:</b>
+- Status
+- Project Details
+  - Overview
+  - How it works
+  - Availability
+- How to implement
+
 Status
 ======
+
+Sep 05, 2015:
+
+DataBuddy is now backed by SQLite and has been asbtracted away so replacing the backing is very easy.  If you want to use something more powerful such as MySql you just replace the adapter.
+
+Server side encryption support is read, though that implementation is up to you since this is open source and you don't want to reveal the handshake logic specific to your product.
+
+Aug 31, 2015:
 
 Currently DataBuddy is incomplete and much of it is proof of concept hacked together, don't judge me at this point I'm like 3 hours invested.  The server is working and is capable of handling concurrent users and concurrent commands from users.  However put and get data is not yet persisted (a key requirement) but it will be there soon. Like hours, maybe days...?
 
@@ -41,6 +57,15 @@ A user can by anonymous or a registered user with a username and password. The s
 Databuddy is written in Java and can be used anywhere you can fit a JVM (Java 1.8_60).  If there's no Client API available for the language you're lookng for, it's pretty simple to write -- kind of like talking to Memcached, open a port and write some bytes, then read some bytes.
 Given that I use this in Unity, there should no doubt be some progress on a C# Client API.  If you do produce a Client API for other useful languages, please let me know and I can link to for others to find.
 
+How to implement
+======
 
+The project code as it is now, is sort of in a testing state for ease of development.  I'm sort of developing it as I go for the needs of my own project and abstracting away for general use.  My specific bits are not committed here so I apologize if some of the code appears fragmented.  However it is always in a debugging runnable state in the form of a pseudo-sample implementation.  Having said that, here's some key places to look to plug in your own bits.
+
+- DataBuddy.java - The face of the server.  It greets the client and quickly delegates off to the ClientConnection.
+  - The main connection listen loop runs here in the main thread.
+  - Since this is the core of the server, commands that involve other connections pass through here, commands such as relaying messages from one client to another.  Client-A must identify Client-B via DataBuddy as DataBuddy is the parent and knows all its children, but Client-A and Client-B are siblings and are not directly aware of eachother.  Binding clients is not advisable as connections can be lost at any time.  Best practice is to associate a client to a user or session and ask DataBuddy (the parent) to find the client-sibling by name (user or session, etc) for safety.
+- ClientConnection.java - The heart[s] of the server.  Each client gets its own instance running in its own thread.
+- ConnectionDelegate.java - Your interface and customization to how the client should handle received messages.
 
 Please feel free to contact me if you want to know more.
