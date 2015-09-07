@@ -60,10 +60,26 @@ Given that I use this in Unity, there should no doubt be some progress on a C# C
 How to implement
 ======
 
-Open the project in eclipse, run Main.java then
-`
+Open the project in eclipse, run Main.java and telnet to locahost on port 25564:
+
+```
 telnet localhost 25564
-`
+```
+
+Now paste the following into telnet to authrorize yourself as a user:
+
+```
+auth request_auth=user&username=theUsername&password=thePassword
+```
+
+Now you may put and get data:
+
+```
+put topic subtopic {key=value}
+
+get topic subtopic
+```
+
 
 The project code as it is now, is sort of in a testing state for ease of development.  I'm sort of developing it as I go for the needs of my own project and abstracting away for general use.  My specific bits are not committed here so I apologize if some of the code appears fragmented.  However it is always in a debugging runnable state in the form of a pseudo-sample implementation.  Having said that, here's some key places to look to plug in your own bits.
 
