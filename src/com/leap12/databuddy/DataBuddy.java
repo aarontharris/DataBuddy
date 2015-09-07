@@ -40,7 +40,7 @@ public final class DataBuddy {
 				try {
 					Log.d("Listening on Port %s", port);
 					Socket socket = null;
-					while (running && (socket = serverSocket.accept()) != null) {
+					while (running && (socket = serverSocket.accept()) != null) { // FIXME: block failed connections for 10 seconds
 						ClientConnection connection = new ClientConnection(socket);
 						connection.setDelegate(new HandshakeConnection());
 						connection.run();
