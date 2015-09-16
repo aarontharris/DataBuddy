@@ -14,6 +14,52 @@
           <target>1.8</target>
         </configuration>
       </plugin>
+
+      <!-- this runs the project after its built, not what we want -->
+      <!--
+      <plugin>  
+        <groupId>org.codehaus.mojo</groupId>  
+        <artifactId>exec-maven-plugin</artifactId>  
+        <version>1.1.1</version>  
+        <executions>  
+          <execution>  
+            <phase>test</phase>  
+            <goals>  
+              <goal>java</goal>  
+            </goals>  
+            <configuration>  
+              <mainClass>com.leap12.databuddy.Main</mainClass>  
+              <arguments>  
+                <argument>-D</argument>  
+                <argument>port=25565</argument>  
+              </arguments>  
+            </configuration>  
+          </execution>  
+        </executions>  
+      </plugin>
+      -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>com.leap12.databuddy.Main</mainClass>  
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
   <dependencies>
