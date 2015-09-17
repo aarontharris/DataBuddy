@@ -1,3 +1,26 @@
-#!/bin/sh
+#!/usr/bin/perl
 
-java -jar -Dport=25564 dataBuddy.jar
+#java -jar -Dport=25564 dataBuddy.jar
+
+use strict;
+
+&main();
+sub main {
+  my $file = &findJar();
+
+  # build if the jar wasn't found
+  if ( $file eq "" ) {
+    print "Jar not found, first build w/ mvn clean install\n";
+    return;
+  }
+
+  # run the jar
+  system("java -jar $file");
+}
+
+# Cheater way to find the jar
+sub findJar {
+  my $file = `ls ./target/DataBuddy*.jar`;
+  chomp($file);
+  return $file;
+}
