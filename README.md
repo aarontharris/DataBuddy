@@ -1,4 +1,4 @@
-DataBuddy
+DataBuddy [![Build Status](https://travis-ci.org/aarontharris/DataBuddy.svg)](https://travis-ci.org/aarontharris/DataBuddy)
 ======
 
 Its a datastore that aims to be ultra portable, lightweight and very powerful.
