@@ -1,12 +1,13 @@
 #!/usr/bin/perl
 
-#java -jar -Dport=25564 dataBuddy.jar
+# USAGE: ./dataBuddy <port>
 
 use strict;
 
 &main();
 sub main {
   my $file = &findJar();
+  my $port = $ARGV[0];
 
   # build if the jar wasn't found
   if ( $file eq "" ) {
@@ -14,8 +15,21 @@ sub main {
     return;
   }
 
+  print "port = $port\n";
+  &runJar($file, $port);
+}
+
+sub runJar {
+  my $file = shift;
+  my $port = shift;
+  my $args = "";
+
+  if ( $port > 0 ) {
+    $args = "-Dport=$port ";
+  }
+
   # run the jar
-  system("java -jar $file");
+  system("java -jar $args$file");
 }
 
 # Cheater way to find the jar
