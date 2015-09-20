@@ -1,6 +1,6 @@
 package com.leap12.databuddy.commands;
 
-import com.leap12.databuddy.BaseConnection;
+import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
 import com.leap12.databuddy.Commands.Command;
@@ -13,7 +13,7 @@ public class HelpCmd extends Command<String> {
 	}
 
 	@Override
-	public CmdResponse<String> executeCommand(BaseConnection connection, String msg) {
+	public CmdResponse<String> executeCommand(BaseConnectionDelegate connection, String msg) {
 		// List<Command<?>> commands = new ArrayList<>(Commands.get().getCommands(connection.getRole()));
 		// Collections.sort(commands, Commands.COMMAND_COMPARATOR);
 		// for (Command<?> command : commands) {

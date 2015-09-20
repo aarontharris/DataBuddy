@@ -6,7 +6,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.json.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.leap12.databuddy.BaseConnection;
+import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.sqlite.SqliteDataStoreManager;
 
 // Why wrap the SqliteDataStore ?
@@ -23,11 +23,11 @@ public final class Dao implements DataStore {
 	};
 
 	private static final Gson gson = new GsonBuilder().create();
-	private static final WeakHashMap<BaseConnection, Dao> daos = new WeakHashMap<>();
+	private static final WeakHashMap<BaseConnectionDelegate, Dao> daos = new WeakHashMap<>();
 	private static Lock lock = new ReentrantLock();
 
 	/** Thread safe */
-	public static final Dao getInstance(BaseConnection connection) {
+	public static final Dao getInstance(BaseConnectionDelegate connection) {
 		lock.lock(); // this should be incredibly fast so lets not bother with the reentranceness
 		try {
 			Dao dao = daos.get(connection);
@@ -41,7 +41,7 @@ public final class Dao implements DataStore {
 		}
 	}
 	/** Thread safe */
-	public static final void releaseInstance(BaseConnection connection) {
+	public static final void releaseInstance(BaseConnectionDelegate connection) {
 		lock.lock(); // this should be incredibly fast so lets not bother with the reentranceness
 		try {
 			daos.remove(connection);
