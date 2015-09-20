@@ -8,6 +8,10 @@ import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.Command;
 import com.leap12.databuddy.Commands.Role;
 
+/**
+ * This is a connection tailored for a user in need of a persistent connection. Ideal for pushing an pulling data without having to reconnect each
+ * time as the connection remains open until explicitly closed by client or server.
+ */
 public class UserConnection extends BaseConnection {
 
 	private static final Command<?>[] commands = new Command[] {

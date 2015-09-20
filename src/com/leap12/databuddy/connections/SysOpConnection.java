@@ -3,6 +3,9 @@ package com.leap12.databuddy.connections;
 import com.leap12.databuddy.Commands.Role;
 import com.leap12.databuddy.DataBuddy;
 
+/**
+ * A UserConnection with advanced commands
+ */
 public class SysOpConnection extends UserConnection {
 
 	@Override

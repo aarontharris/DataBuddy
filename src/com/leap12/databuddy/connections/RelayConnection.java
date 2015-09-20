@@ -8,6 +8,11 @@ import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.Command;
 import com.leap12.databuddy.Commands.Role;
 
+/**
+ * Like A UserConnection in that it remains open, but this connection is meant to be able to run parallel to the standard UserConnection as a client
+ * may want a UserConnection for the user to issue commands and a separate RelayConnection to listen for data being broadcast from the server or other
+ * users.
+ */
 public class RelayConnection extends BaseConnection {
 
 	private static final Command<?>[] commands = new Command[] {

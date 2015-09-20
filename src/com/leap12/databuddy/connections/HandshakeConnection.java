@@ -8,6 +8,9 @@ import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.RequestStatus;
 import com.leap12.databuddy.Commands.Role;
 
+/**
+ * The default launchpad connection. It serves as the Connection "Factory", routing a client to the appropriate connection based on how they connect.
+ */
 public class HandshakeConnection extends BaseConnection {
 
 	@Override
