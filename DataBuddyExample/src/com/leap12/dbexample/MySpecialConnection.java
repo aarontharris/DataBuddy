@@ -21,9 +21,9 @@ public class MySpecialConnection extends BaseConnectionDelegate {
 
 	@Override
 	protected void onReceivedMsg(String msg) throws Exception {
-		logDebugMessageWithNewlineChars(msg);
+		logDebugMessageWithNewlineChars(msg); // log the incoming request for fun
 
-		if (msg.contains("HTTP")) {
+		if (msg.contains("HTTP")) { // a very poor way to check if this is an http request, whatever its an example
 			getClientConnection().setKeepAlive(false);
 			writeMsg(""
 					+ "<html>"
@@ -31,6 +31,8 @@ public class MySpecialConnection extends BaseConnectionDelegate {
 					+ "<b>Boo... I'm a webserver...</b>"
 					+ "</body>"
 					+ "</html>\r\n\r\n");
+		} else {
+			writeMsg("I am a telnet bot...beep bop boop beep.");
 		}
 	}
 
