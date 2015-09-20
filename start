@@ -4,6 +4,8 @@
 
 use strict;
 
+my $JAR_PATTERN = './target/DataBuddy*.jar';
+
 &main();
 sub main {
   my $file = &findJar();
@@ -34,7 +36,7 @@ sub runJar {
 
 # Cheater way to find the jar
 sub findJar {
-  my $file = `ls ./target/DataBuddy*.jar`;
+  my $file = `ls $JAR_PATTERN`;
   chomp($file);
   return $file;
 }

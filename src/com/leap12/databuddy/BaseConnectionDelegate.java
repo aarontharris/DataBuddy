@@ -17,6 +17,12 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 
 	private DataStore db;
 
+	@Override
+	protected void onAttached(ClientConnection connection) throws Exception {
+		connection.setInactivityTimeout(10000);
+		connection.setKeepAlive(false); // we don't know the client protocol yet, lets assume close when done unless told otherwise
+	}
+
 	/**
 	 * Only available while this delegate is attached to the ClientConnection
 	 */
