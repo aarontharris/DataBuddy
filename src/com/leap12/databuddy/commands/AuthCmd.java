@@ -4,7 +4,7 @@ import java.util.Map;
 import com.leap12.common.Log;
 import com.leap12.common.Preconditions;
 import com.leap12.common.StrUtl;
-import com.leap12.databuddy.BaseConnection;
+import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
 import com.leap12.databuddy.Commands.Command;
@@ -22,7 +22,7 @@ public class AuthCmd extends Command<Role> {
 	}
 
 	@Override
-	public CmdResponse<Role> executeCommand(BaseConnection connection, String msg) {
+	public CmdResponse<Role> executeCommand(BaseConnectionDelegate connection, String msg) {
 		final CmdResponseMutable<Role> response = new CmdResponseMutable<>(Role.class);
 		try {
 			msg = msg.substring(beginIndex, msg.length()); // from=zero-based-inclusive, to=zero-based-inclusive

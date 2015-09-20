@@ -82,7 +82,7 @@ public final class Commands {
 		 * @param msg
 		 * @return
 		 */
-		public abstract CmdResponse<T> executeCommand(BaseConnection connection, String msg);
+		public abstract CmdResponse<T> executeCommand(BaseConnectionDelegate connection, String msg);
 	}
 
 	@SuppressWarnings("serial")

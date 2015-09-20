@@ -8,7 +8,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import com.leap12.common.ClientConnection;
 import com.leap12.common.Log;
-import com.leap12.databuddy.connections.HandshakeConnection;
+import com.leap12.databuddy.aspects.HandshakeDelegate;
 
 public final class DataBuddy {
 	private static final DataBuddy self = new DataBuddy();
@@ -26,6 +26,13 @@ public final class DataBuddy {
 	}
 
 	public synchronized void startup() throws Exception {
+		startup(HandshakeDelegate.class);
+	}
+
+	/**
+	 * @param connectionDelegate Who will be handling the connection messages. The class must have an empty constructor.
+	 */
+	public synchronized void startup(Class<? extends BaseConnectionDelegate> connectionDelegateClass) throws Exception {
 		if (!running) {
 			running = true;
 			ServerSocket serverSocket = null;
@@ -42,7 +49,8 @@ public final class DataBuddy {
 					Socket socket = null;
 					while (running && (socket = serverSocket.accept()) != null) { // FIXME: block failed connections for 10 seconds
 						ClientConnection connection = new ClientConnection(socket);
-						connection.setDelegate(new HandshakeConnection());
+						BaseConnectionDelegate delegate = connectionDelegateClass.newInstance();
+						connection.setDelegate(delegate);
 						connection.run();
 						connections.put(connection, System.currentTimeMillis());
 					}

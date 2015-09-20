@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+
+# USAGE: ./start <port>
+
+use strict;
+
+&main();
+sub main {
+  my $file = &findJar();
+  my $port = $ARGV[0];
+
+  # build if the jar wasn't found
+  if ( $file eq "" ) {
+    print "Jar not found, first build w/ mvn clean install\n";
+    return;
+  }
+
+  print "port = $port\n";
+  &runJar($file, $port);
+}
+
+sub runJar {
+  my $file = shift;
+  my $port = shift;
+  my $args = "";
+
+  if ( $port > 0 ) {
+    $args = "-Dport=$port ";
+  }
+
+  # run the jar
+  system("java -jar $args$file");
+}
+
+# Cheater way to find the jar
+sub findJar {
+  my $file = `ls ./target/DataBuddy*.jar`;
+  chomp($file);
+  return $file;
+}

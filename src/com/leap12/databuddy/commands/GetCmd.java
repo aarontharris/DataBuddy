@@ -2,7 +2,7 @@ package com.leap12.databuddy.commands;
 
 import java.util.Map;
 import com.leap12.common.StrUtl;
-import com.leap12.databuddy.BaseConnection;
+import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
@@ -21,7 +21,7 @@ public class GetCmd extends Command<String> {
 	}
 
 	@Override
-	public CmdResponse<String> executeCommand(BaseConnection connection, String msg) {
+	public CmdResponse<String> executeCommand(BaseConnectionDelegate connection, String msg) {
 		final CmdResponseMutable<String> response = new CmdResponseMutable<>(String.class);
 		response.setStatus(RequestStatus.UNFULFILLED);
 		try {
