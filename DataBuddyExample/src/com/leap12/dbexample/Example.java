@@ -14,7 +14,7 @@ public class Example {
 			});
 
 			DataBuddy dataBuddy = DataBuddy.get();
-			dataBuddy.startup(MySpecialConnection.class);
+			dataBuddy.startup(MySpecialDelegate.class);
 		} catch (Exception e) {
 			Log.e(e, "Trouble during startup");
 		}
