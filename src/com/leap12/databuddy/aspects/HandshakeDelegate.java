@@ -21,7 +21,7 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 
 	@Override
 	protected void onReceivedMsg(String msg) throws Exception {
-		logDebugMessageWithNewlineChars(msg);
+		Log.debugNewlineChars(msg);
 
 		// If we are a proper auth command, then deal with it
 		if (Commands.CMD_AUTH.isCommand(msg)) {

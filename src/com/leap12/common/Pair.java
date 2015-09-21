@@ -1,5 +1,6 @@
 package com.leap12.common;
 
+/** Considered unique by key, not value */
 public class Pair<A, B> {
 	public A a;
 	public B b;
@@ -22,7 +23,7 @@ public class Pair<A, B> {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((a == null) ? 0 : a.hashCode());
-		result = prime * result + ((b == null) ? 0 : b.hashCode());
+		// result = prime * result + ((b == null) ? 0 : b.hashCode());
 		return result;
 	}
 
@@ -41,11 +42,11 @@ public class Pair<A, B> {
 				return false;
 		} else if (!a.equals(other.a))
 			return false;
-		if (b == null) {
-			if (other.b != null)
-				return false;
-		} else if (!b.equals(other.b))
-			return false;
+		// if (b == null) {
+		// if (other.b != null)
+		// return false;
+		// } else if (!b.equals(other.b))
+		// return false;
 		return true;
 	}
 

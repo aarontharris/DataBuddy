@@ -15,4 +15,3 @@ my $cmd = sprintf( "mvn install:install-file -Dfile=%s -DgroupId=%s -DartifactId
 print $cmd . "\n";
 system( $cmd );
 
-system( "cp $pathToFile ./DataBuddyExample/lib/" );

@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+
+system( "mvn clean install" );
+system ("./installJar" );
+
+my $pathToFile = `ls target/DataBuddy*.jar`;
+chomp($pathToFile);
+system( "cp $pathToFile ./DataBuddyExample/lib/" );
