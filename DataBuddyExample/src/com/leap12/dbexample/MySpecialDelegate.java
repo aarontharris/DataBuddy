@@ -1,6 +1,7 @@
 package com.leap12.dbexample;
 
 import com.leap12.common.ClientConnection;
+import com.leap12.common.Log;
 import com.leap12.databuddy.BaseConnectionDelegate;
 
 public class MySpecialDelegate extends BaseConnectionDelegate {
@@ -21,7 +22,7 @@ public class MySpecialDelegate extends BaseConnectionDelegate {
 
 	@Override
 	protected void onReceivedMsg(String msg) throws Exception {
-		logDebugMessageWithNewlineChars(msg); // log the incoming request for fun
+		Log.debugNewlineChars(msg); // log the incoming request for fun
 
 		if (msg.contains("HTTP")) { // a very poor way to check if this is an http request, whatever its an example
 
