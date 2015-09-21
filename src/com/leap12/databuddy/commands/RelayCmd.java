@@ -3,11 +3,11 @@ package com.leap12.databuddy.commands;
 import com.leap12.common.ClientConnection;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands.CmdResponse;
-import com.leap12.databuddy.Commands.Command;
 import com.leap12.databuddy.Commands.RequestStatus;
+import com.leap12.databuddy.Commands.StrCommand;
 import com.leap12.databuddy.DataBuddy;
 
-public class RelayCmd extends Command<Void> {
+public class RelayCmd extends StrCommand<Void> {
 
 	public RelayCmd() {
 		super("relay", "relay [msg]", Void.class);

@@ -24,7 +24,7 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 		Log.debugNewlineChars(msg);
 
 		// If we are a proper auth command, then deal with it
-		if (Commands.CMD_AUTH.isCommand(msg)) {
+		if (1.0f == Commands.CMD_AUTH.isCommand(msg)) {
 			getClientConnection().setKeepAlive(true);
 			try {
 				UserDelegate connection = handleAuthenticateUser(msg);

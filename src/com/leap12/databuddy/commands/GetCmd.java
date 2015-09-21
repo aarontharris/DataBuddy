@@ -6,11 +6,11 @@ import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
-import com.leap12.databuddy.Commands.Command;
 import com.leap12.databuddy.Commands.DBuddyArgsException;
 import com.leap12.databuddy.Commands.RequestStatus;
+import com.leap12.databuddy.Commands.StrCommand;
 
-public class GetCmd extends Command<String> {
+public class GetCmd extends StrCommand<String> {
 	private final int beginIndex;
 
 	public GetCmd() {

@@ -3,10 +3,10 @@ package com.leap12.databuddy.commands;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
-import com.leap12.databuddy.Commands.Command;
 import com.leap12.databuddy.Commands.RequestStatus;
+import com.leap12.databuddy.Commands.StrCommand;
 
-public class HelpCmd extends Command<String> {
+public class HelpCmd extends StrCommand<String> {
 
 	public HelpCmd() {
 		super("help", "help", String.class);

@@ -178,14 +178,20 @@ public class StrUtl {
 			return null;
 		}
 
-		BufferedInputStream bIn = new BufferedInputStream(in, readSize);
-
-		byte[] data = new byte[readSize];
-		StringBuilder sb = new StringBuilder();
-		while (bIn.read(data, 0, readSize) > 0) {
-			sb.append(toString(data));
+		BufferedInputStream bIn = null;
+		try {
+			bIn = new BufferedInputStream(in, readSize);
+			byte[] data = new byte[readSize];
+			StringBuilder sb = new StringBuilder();
+			while (bIn.read(data, 0, readSize) > 0) {
+				sb.append(toString(data));
+			}
+			return sb.toString();
+		} finally {
+			if (bIn != null) {
+				bIn.close();
+			}
 		}
-		return sb.toString();
 	}
 
 	public static final byte[] EMPTY_BYTEPRIM_ARRAY = new byte[0];
