@@ -25,19 +25,15 @@ public class SendMail {
 	public SendMail() {
 	}
 
-	public SendMail(String username, String password, String from) {
+	public SendMail(String username, String password) {
 		this.username = username;
 		this.password = password;
-		this.from = from;
+		this.from = username;
 	}
 
 	public void setAuth(String username, String password) {
 		this.username = username;
 		this.password = password;
-	}
-
-	public void setFrom(String from) {
-		this.from = from;
 	}
 
 	public void setSubject(String subject) {
