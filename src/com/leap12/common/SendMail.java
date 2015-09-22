@@ -86,7 +86,8 @@ public class SendMail {
 		Message message = new MimeMessage(session);
 		message.setFrom(new InternetAddress(from));
 		for (String recipient : recipients) {
-			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
+			Log.d("Recipient: '%s'", recipient);
+			message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
 		}
 		message.setSubject(subject);
 		message.setText(body);
