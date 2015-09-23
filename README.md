@@ -60,6 +60,10 @@ Given that I use this in Unity, there should no doubt be some progress on a C# C
 How to implement
 ======
 
+You've got options
+- DataBuddy is an executable Jar. You can fork the project and start hacking, rebuild it and deploy.
+- You can also include the Jar in your own project, create your own ConnectionDelegate, tell DataBuddy to use it and you're ready to go, all messages are delivered to you, you have access to a data store and you don't have to concern yourself about the internals.
+
 Open the project in eclipse, run Main.java and telnet to locahost on port 25564:
 
 ```

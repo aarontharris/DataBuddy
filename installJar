@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+my $groupId = 'com.leap12.databuddy';
+my $artifact = 'DataBuddy';
+my $version = '0.0.1-SNAPSHOT';
+my $packaging = 'jar';
+my $pathToFile = `ls target/DataBuddy*.jar`;
+chomp($pathToFile);
+
+#mvn install:install-file -Dfile=<path-to-file> -DgroupId=<group-id> -DartifactId=<artifact-id> -Dversion=<version> -Dpackaging=<packaging>
+my $cmd = sprintf( "mvn install:install-file -Dfile=%s -DgroupId=%s -DartifactId=%s -Dversion=%s -Dpackaging=%s",
+            $pathToFile, $groupId, $artifact, $version, $packaging
+            );
+
+print $cmd . "\n";
+system( $cmd );
+

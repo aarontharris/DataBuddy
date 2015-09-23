@@ -1,95 +1,79 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>DataBuddy</groupId>
-  <artifactId>DataBuddy</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  <build>
-    <sourceDirectory>src</sourceDirectory>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.leap12.databuddy</groupId>
+	<artifactId>DataBuddy</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+	<build>
+		<sourceDirectory>src</sourceDirectory>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
 
-      <!-- this runs the project after its built, not what we want -->
-      <!--
-      <plugin>  
-        <groupId>org.codehaus.mojo</groupId>  
-        <artifactId>exec-maven-plugin</artifactId>  
-        <version>1.1.1</version>  
-        <executions>  
-          <execution>  
-            <phase>test</phase>  
-            <goals>  
-              <goal>java</goal>  
-            </goals>  
-            <configuration>  
-              <mainClass>com.leap12.databuddy.Main</mainClass>  
-              <arguments>  
-                <argument>-D</argument>  
-                <argument>port=25565</argument>  
-              </arguments>  
-            </configuration>  
-          </execution>  
-        </executions>  
-      </plugin>
-      -->
+			<!-- this runs the project after its built, not what we want -->
+			<!-- <plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>exec-maven-plugin</artifactId> 
+				<version>1.1.1</version> <executions> <execution> <phase>test</phase> <goals> 
+				<goal>java</goal> </goals> <configuration> <mainClass>com.leap12.databuddy.DefaultLauncher</mainClass> 
+				<arguments> <argument>-D</argument> <argument>port=25565</argument> </arguments> 
+				</configuration> </execution> </executions> </plugin> -->
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <createDependencyReducedPom>false</createDependencyReducedPom>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.leap12.databuddy.Main</mainClass>  
-                </transformer>
-              </transformers>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.4.1</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>com.leap12.databuddy.DefaultLauncher</mainClass>
+								</transformer>
+							</transformers>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 
-    </plugins>
-  </build>
-  <dependencies>
-<!--
-    <dependency>
-      <groupId>json-20150901</groupId>
-      <artifactId>com.json</artifactId>
-      <version>20150901</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/lib/json-20150901.jar</systemPath>
-    </dependency>
--->
-    <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>20141113</version>
-    </dependency>
-    <dependency>
-        <groupId>org.xerial</groupId>
-        <artifactId>sqlite-jdbc</artifactId>
-        <version>3.8.11.1</version>
-    </dependency>
-    <dependency>
-        <groupId>com.google.code.gson</groupId>
-        <artifactId>gson</artifactId>
-        <version>2.3.1</version>
-    </dependency>
-  </dependencies>
+		</plugins>
+	</build>
+	<dependencies>
+		<!-- <dependency> <groupId>json-20150901</groupId> <artifactId>com.json</artifactId> 
+			<version>20150901</version> <scope>system</scope> <systemPath>${project.basedir}/lib/json-20150901.jar</systemPath> 
+			</dependency> -->
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20141113</version>
+		</dependency>
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.8.11.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.7</version>
+		</dependency>
+	</dependencies>
 </project>

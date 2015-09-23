@@ -6,7 +6,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.json.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.leap12.databuddy.BaseConnection;
+import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.sqlite.SqliteDataStoreManager;
 
 // Why wrap the SqliteDataStore ?
@@ -23,11 +23,11 @@ public final class Dao implements DataStore {
 	};
 
 	private static final Gson gson = new GsonBuilder().create();
-	private static final WeakHashMap<BaseConnection, Dao> daos = new WeakHashMap<>();
+	private static final WeakHashMap<BaseConnectionDelegate, Dao> daos = new WeakHashMap<>();
 	private static Lock lock = new ReentrantLock();
 
 	/** Thread safe */
-	public static final Dao getInstance(BaseConnection connection) {
+	public static final Dao getInstance(BaseConnectionDelegate connection) {
 		lock.lock(); // this should be incredibly fast so lets not bother with the reentranceness
 		try {
 			Dao dao = daos.get(connection);
@@ -41,7 +41,7 @@ public final class Dao implements DataStore {
 		}
 	}
 	/** Thread safe */
-	public static final void releaseInstance(BaseConnection connection) {
+	public static final void releaseInstance(BaseConnectionDelegate connection) {
 		lock.lock(); // this should be incredibly fast so lets not bother with the reentranceness
 		try {
 			daos.remove(connection);
@@ -60,59 +60,43 @@ public final class Dao implements DataStore {
 	public void saveString(String topic, String subtopic, String key, String value) throws Exception {
 		mDataStore.saveString(topic, subtopic, key, value);
 	}
-
 	@Override
 	public String loadString(String topic, String subtopic, String key) throws Exception {
 		return mDataStore.loadString(topic, subtopic, key);
 	}
 	@Override
 	public void saveBlob(String topic, String subtopic, String key, byte[] value) throws Exception {
-		// TODO Auto-generated method stub
-
 	}
 	@Override
 	public byte[] loadBlob(String topic, String subtopic, String key) throws Exception {
-		// TODO Auto-generated method stub
 		return null;
 	}
 	@Override
 	public void saveInt(String topic, String subtopic, String key, int value) throws Exception {
-		// TODO Auto-generated method stub
-
 	}
 	@Override
 	public int loadInt(String topic, String subtopic, String key) throws Exception {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 	@Override
 	public void saveBoolean(String topic, String subtopic, String key, boolean value) throws Exception {
-		// TODO Auto-generated method stub
-
 	}
 	@Override
 	public boolean loadBoolean(String topic, String subtopic, String key) throws Exception {
-		// TODO Auto-generated method stub
 		return false;
 	}
 	@Override
 	public void saveFloat(String topic, String subtopic, String key, byte[] value) throws Exception {
-		// TODO Auto-generated method stub
-
 	}
 	@Override
 	public float loadFloat(String topic, String subtopic, String key) throws Exception {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 	@Override
 	public void saveJSONObject(String topic, String subtopic, String key, JSONObject value) throws Exception {
-		// TODO Auto-generated method stub
-
 	}
 	@Override
 	public JSONObject loadJSONObject(String topic, String subtopic, String key) throws Exception {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

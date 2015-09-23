@@ -5,7 +5,7 @@ public class Log {
 
 	private static String prefix() {
 		long now = System.currentTimeMillis();
-		return String.format("[%04d][%08d] ", Thread.currentThread().getId(), (now - startTime));
+		return String.format("[%04d][%012d] ", Thread.currentThread().getId(), (now - startTime));
 	}
 
 	public static void d(String format, Object... args) {
@@ -25,4 +25,14 @@ public class Log {
 		error.printStackTrace();
 	}
 
+	/**
+	 * Shows the message with newLine characters \r and \n exposed for debugging
+	 */
+	public static void debugNewlineChars(String msg) {
+		String output = msg.replace("\r\n", "\\r\\n_DB_BREAK_");
+		output = output.replace("\r", "\\r_DB_BREAK_");
+		output = output.replace("\n", "\\n_DB_BREAK_");
+		output = output.replace("_DB_BREAK_", "\n");
+		Log.d(output);
+	}
 }

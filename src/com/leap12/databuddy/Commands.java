@@ -1,7 +1,6 @@
 package com.leap12.databuddy;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import com.leap12.common.StrUtl;
 import com.leap12.common.props.Props;
@@ -15,12 +14,6 @@ import com.leap12.databuddy.commands.PutCmd;
 import com.leap12.databuddy.commands.RelayCmd;
 
 public final class Commands {
-	public static final Comparator<Command<?>> COMMAND_COMPARATOR = new Comparator<Command<?>>() {
-		@Override
-		public int compare(Command<?> o1, Command<?> o2) {
-			return o1.getName().compareTo(o2.getName());
-		}
-	};
 
 	public static enum Role {
 		user, sysop;
@@ -34,26 +27,14 @@ public final class Commands {
 		}
 	}
 
-	public static abstract class Command<T> {
-		private final String mCmdName;
-		private final String mCmdFormat;
-		private final Class<T> mType;
+	public static abstract class Command<IN, OUT> {
+		private final Class<OUT> mType;
 
-		public Command(String cmdName, String cmdFormat, Class<T> type) {
-			this.mCmdName = cmdName;
-			this.mCmdFormat = cmdFormat;
+		public Command(Class<OUT> type) {
 			this.mType = type;
 		}
 
-		public String getName() {
-			return mCmdName;
-		}
-
-		public String getFormat() {
-			return mCmdFormat;
-		}
-
-		public Class<T> getType() {
+		public Class<OUT> getType() {
 			return mType;
 		}
 
@@ -72,9 +53,11 @@ public final class Commands {
 			return StrUtl.EMPTY;
 		}
 
-		public boolean isCommand(String msg) {
-			return StrUtl.startsWith(msg, getName());
-		}
+		/**
+		 * @param in
+		 * @return 0.0 to 1.0 where 0.0 is 0% match and 1.0 is 100% match
+		 */
+		public abstract float isCommand(IN in);
 
 		/**
 		 * <B>Never Throws</b> instead see {@link CmdResponse#getError()} and {@link CmdResponse#getStatus()}
@@ -82,7 +65,31 @@ public final class Commands {
 		 * @param msg
 		 * @return
 		 */
-		public abstract CmdResponse<T> executeCommand(BaseConnection connection, String msg);
+		public abstract CmdResponse<OUT> executeCommand(BaseConnectionDelegate connection, IN input);
+	}
+
+	public static abstract class StrCommand<OUT> extends Command<String, OUT> {
+		private final String mCmdName;
+		private final String mCmdFormat;
+
+		public StrCommand(String cmdName, String cmdFormat, Class<OUT> type) {
+			super(type);
+			this.mCmdName = cmdName;
+			this.mCmdFormat = cmdFormat;
+		}
+
+		public String getName() {
+			return mCmdName;
+		}
+
+		public String getFormat() {
+			return mCmdFormat;
+		}
+
+		@Override
+		public float isCommand(String in) {
+			return StrUtl.isNotEmpty(in) && in.startsWith(getName()) ? 1f : 0f;
+		}
 	}
 
 	@SuppressWarnings("serial")
@@ -295,7 +302,7 @@ public final class Commands {
 	private Commands() {
 	}
 
-	public List<Command<?>> getCommands(Role role) {
+	public List<Command<?, ?>> getCommands(Role role) {
 		return Collections.emptyList();
 	}
 
