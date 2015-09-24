@@ -25,87 +25,87 @@ public class SendMail {
 	public SendMail() {
 	}
 
-	public SendMail(String username, String password) {
+	public SendMail( String username, String password ) {
 		this.username = username;
 		this.password = password;
 		this.from = username;
 	}
 
-	public void setAuth(String username, String password) {
+	public void setAuth( String username, String password ) {
 		this.username = username;
 		this.password = password;
 	}
 
-	public void setSubject(String subject) {
+	public void setSubject( String subject ) {
 		this.subject = subject;
 	}
 
-	public void setBody(String body) {
+	public void setBody( String body ) {
 		this.body = body;
 	}
 
-	public void setRecipients(List<String> recipients) {
+	public void setRecipients( List<String> recipients ) {
 		this.recipients = recipients;
 	}
 
-	public void setPort(int port) {
+	public void setPort( int port ) {
 		this.port = port;
 	}
 
-	public void setSmtpHost(String host) {
+	public void setSmtpHost( String host ) {
 		this.host = host;
 	}
 
-	public void setSmtpAuth(boolean auth) {
+	public void setSmtpAuth( boolean auth ) {
 		this.auth = auth;
 	}
 
-	public void setTLS(boolean tls) {
+	public void setTLS( boolean tls ) {
 		this.tls = tls;
 	}
 
 	public void send() throws Exception {
 		validate();
 		Properties props = new Properties();
-		props.put("mail.smtp.auth", String.valueOf(auth));
-		props.put("mail.smtp.starttls.enable", String.valueOf(tls));
-		props.put("mail.smtp.host", host);
-		props.put("mail.smtp.port", String.valueOf(port));
+		props.put( "mail.smtp.auth", String.valueOf( auth ) );
+		props.put( "mail.smtp.starttls.enable", String.valueOf( tls ) );
+		props.put( "mail.smtp.host", host );
+		props.put( "mail.smtp.port", String.valueOf( port ) );
 
-		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+		Session session = Session.getInstance( props, new javax.mail.Authenticator() {
 			@Override
 			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(username, password);
+				return new PasswordAuthentication( username, password );
 			}
-		});
+		} );
 
-		Message message = new MimeMessage(session);
-		message.setFrom(new InternetAddress(from));
-		for (String recipient : recipients) {
-			Log.d("Recipient: '%s'", recipient);
-			message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
+		Message message = new MimeMessage( session );
+		message.setFrom( new InternetAddress( from ) );
+		for ( String recipient : recipients ) {
+			Log.d( "Recipient: '%s'", recipient );
+			message.addRecipients( Message.RecipientType.TO, InternetAddress.parse( recipient ) );
 		}
-		message.setSubject(subject);
-		message.setText(body);
-		Transport.send(message);
+		message.setSubject( subject );
+		message.setText( body );
+		Transport.send( message );
 	}
 
 	private void validate() {
 		String errMsg = "";
-		if (StrUtl.isEmpty(username)) {
+		if ( StrUtl.isEmpty( username ) ) {
 			errMsg = errMsg + "username is empty;";
 		}
-		if (StrUtl.isEmpty(password)) {
+		if ( StrUtl.isEmpty( password ) ) {
 			errMsg = errMsg + "password is empty;";
 		}
-		if (StrUtl.isEmpty(from)) {
+		if ( StrUtl.isEmpty( from ) ) {
 			errMsg = errMsg + "From is empty;";
 		}
-		if (recipients == null || recipients.size() == 0) {
+		if ( recipients == null || recipients.size() == 0 ) {
 			errMsg = errMsg + "No recipients;";
 		}
-		if (errMsg.length() > 0) {
-			throw new IllegalStateException(errMsg);
+		if ( errMsg.length() > 0 ) {
+			throw new IllegalStateException( errMsg );
 		}
 	}
 }

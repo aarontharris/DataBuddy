@@ -13,11 +13,11 @@ import com.leap12.common.props.PropsWrite;
 public class StrUtl {
 	public static final String EMPTY = "";
 
-	public static boolean isNotEmpty(String string) {
-		return !isEmpty(string);
+	public static boolean isNotEmpty( String string ) {
+		return !isEmpty( string );
 	}
 
-	public static boolean isEmpty(String string) {
+	public static boolean isEmpty( String string ) {
 		return string == null || string.isEmpty();
 	}
 
@@ -25,12 +25,12 @@ public class StrUtl {
 	 * True if all of the given strings are empty<br>
 	 * Inverse of {@link #isNotEmptyAny(String...)}
 	 */
-	public static boolean isEmptyAll(String... strings) {
-		if (strings.length == 0) {
+	public static boolean isEmptyAll( String... strings ) {
+		if ( strings.length == 0 ) {
 			return true;
 		}
-		for (String s : strings) {
-			if (!isEmpty(s)) {
+		for ( String s : strings ) {
+			if ( !isEmpty( s ) ) {
 				return false;
 			}
 		}
@@ -41,12 +41,12 @@ public class StrUtl {
 	 * True if all of the given strings are not empty<br>
 	 * Inverse of {@link #isEmptyAny(String...)}
 	 */
-	public static boolean isNotEmptyAll(String... strings) {
-		if (strings.length == 0) {
+	public static boolean isNotEmptyAll( String... strings ) {
+		if ( strings.length == 0 ) {
 			return false;
 		}
-		for (String s : strings) {
-			if (isEmpty(s)) {
+		for ( String s : strings ) {
+			if ( isEmpty( s ) ) {
 				return false;
 			}
 		}
@@ -57,46 +57,46 @@ public class StrUtl {
 	 * True if any of the given strings are empty<br>
 	 * Inverse of {@link #isNotEmptyAll(String...)}
 	 */
-	public static boolean isEmptyAny(String... strings) {
-		return !isNotEmptyAll(strings);
+	public static boolean isEmptyAny( String... strings ) {
+		return !isNotEmptyAll( strings );
 	}
 
 	/**
 	 * True if any of the given strings are not empty<br>
 	 * Inverse of {@link #isEmptyAll(String...)}
 	 */
-	public static boolean isNotEmptyAny(String... strings) {
-		return !isEmptyAll(strings);
+	public static boolean isNotEmptyAny( String... strings ) {
+		return !isEmptyAll( strings );
 	}
 
 	/** @return true if both are equal, but false if either is empty */
-	public static boolean equals(String a, String b) {
-		if (isNotEmpty(a) && isNotEmpty(b)) {
-			a.equals(b);
+	public static boolean equals( String a, String b ) {
+		if ( isNotEmpty( a ) && isNotEmpty( b ) ) {
+			a.equals( b );
 		}
 		return false;
 	}
 
 	/** @return true if A starts with B, false if either is empty */
-	public static boolean startsWith(String a, String b) {
-		if (isNotEmpty(a) && isNotEmpty(b)) {
-			return a.startsWith(b);
+	public static boolean startsWith( String a, String b ) {
+		if ( isNotEmpty( a ) && isNotEmpty( b ) ) {
+			return a.startsWith( b );
 		}
 		return false;
 	}
 
 	/** @return true if A ends with B, false if either is empty */
-	public static boolean endsWith(String a, String b) {
-		if (isNotEmpty(a) && isNotEmpty(b)) {
-			a.endsWith(b);
+	public static boolean endsWith( String a, String b ) {
+		if ( isNotEmpty( a ) && isNotEmpty( b ) ) {
+			a.endsWith( b );
 		}
 		return false;
 	}
 
 	/** @return true if A contains B, false if either is empty */
-	public static boolean contains(String a, String b) {
-		if (isNotEmpty(a) && isNotEmpty(b)) {
-			a.contains(b);
+	public static boolean contains( String a, String b ) {
+		if ( isNotEmpty( a ) && isNotEmpty( b ) ) {
+			a.contains( b );
 		}
 		return false;
 	}
@@ -108,17 +108,17 @@ public class StrUtl {
 	 * @return
 	 * @throws Exception if any of the values are null
 	 */
-	public static List<Pair<String, String>> toPairs(String in, String pairDelim, String recordDelim) throws Exception {
+	public static List<Pair<String, String>> toPairs( String in, String pairDelim, String recordDelim ) throws Exception {
 		List<Pair<String, String>> out = Collections.emptyList();
-		String[] records = in.split(recordDelim);
-		if (records.length > 0) {
+		String[] records = in.split( recordDelim );
+		if ( records.length > 0 ) {
 			List<Pair<String, String>> tmp = new ArrayList<>();
-			for (String record : records) {
-				String[] parts = record.split(pairDelim);
-				if (parts.length != 2) {
-					throw new IllegalStateException("Expected pairs but got an odd number");
+			for ( String record : records ) {
+				String[] parts = record.split( pairDelim );
+				if ( parts.length != 2 ) {
+					throw new IllegalStateException( "Expected pairs but got an odd number" );
 				}
-				tmp.add(new Pair<String, String>(parts[0], parts[1]));
+				tmp.add( new Pair<String, String>( parts[0], parts[1] ) );
 			}
 			out = tmp;
 		}
@@ -132,17 +132,17 @@ public class StrUtl {
 	 * @return
 	 * @throws Exception if any of the values are null
 	 */
-	public static Map<String, String> toMap(String in, String pairDelim, String recordDelim) throws Exception {
+	public static Map<String, String> toMap( String in, String pairDelim, String recordDelim ) throws Exception {
 		Map<String, String> out = Collections.emptyMap();
-		String[] records = in.split(recordDelim);
-		if (records.length > 0) {
+		String[] records = in.split( recordDelim );
+		if ( records.length > 0 ) {
 			Map<String, String> tmp = new HashMap<>();
-			for (String record : records) {
-				String[] parts = record.split(pairDelim);
-				if (parts.length != 2) {
-					throw new IllegalStateException("Expected pairs but got an odd number");
+			for ( String record : records ) {
+				String[] parts = record.split( pairDelim );
+				if ( parts.length != 2 ) {
+					throw new IllegalStateException( "Expected pairs but got an odd number" );
 				}
-				tmp.put(parts[0], parts[1]);
+				tmp.put( parts[0], parts[1] );
 			}
 			out = tmp;
 		}
@@ -156,39 +156,39 @@ public class StrUtl {
 	 * @return
 	 * @throws Exception if any of the values are null
 	 */
-	public static void toProps(String in, String pairDelim, String recordDelim, PropsWrite props) throws Exception {
-		String[] records = in.split(recordDelim);
-		if (records.length > 0) {
-			for (String record : records) {
-				String[] parts = record.split(pairDelim);
-				if (parts.length != 2) {
-					throw new IllegalStateException("Expected pairs but got an odd number");
+	public static void toProps( String in, String pairDelim, String recordDelim, PropsWrite props ) throws Exception {
+		String[] records = in.split( recordDelim );
+		if ( records.length > 0 ) {
+			for ( String record : records ) {
+				String[] parts = record.split( pairDelim );
+				if ( parts.length != 2 ) {
+					throw new IllegalStateException( "Expected pairs but got an odd number" );
 				}
-				props.putString(parts[0], parts[1]);
+				props.putString( parts[0], parts[1] );
 			}
 		}
 	}
 
-	public static String toString(InputStream in) throws Exception {
-		return toString(in, 1024);
+	public static String toString( InputStream in ) throws Exception {
+		return toString( in, 1024 );
 	}
 
-	public static String toString(InputStream in, int readSize) throws Exception {
-		if (in == null) {
+	public static String toString( InputStream in, int readSize ) throws Exception {
+		if ( in == null ) {
 			return null;
 		}
 
 		BufferedInputStream bIn = null;
 		try {
-			bIn = new BufferedInputStream(in, readSize);
+			bIn = new BufferedInputStream( in, readSize );
 			byte[] data = new byte[readSize];
 			StringBuilder sb = new StringBuilder();
-			while (bIn.read(data, 0, readSize) > 0) {
-				sb.append(toString(data));
+			while ( bIn.read( data, 0, readSize ) > 0 ) {
+				sb.append( toString( data ) );
 			}
 			return sb.toString();
 		} finally {
-			if (bIn != null) {
+			if ( bIn != null ) {
 				bIn.close();
 			}
 		}
@@ -197,20 +197,20 @@ public class StrUtl {
 	public static final byte[] EMPTY_BYTEPRIM_ARRAY = new byte[0];
 
 	/** UTF-8 */
-	public static byte[] toBytes(String string) {
-		if (isNotEmpty(string)) {
-			return string.getBytes(StandardCharsets.UTF_8);
+	public static byte[] toBytes( String string ) {
+		if ( isNotEmpty( string ) ) {
+			return string.getBytes( StandardCharsets.UTF_8 );
 		}
 		return EMPTY_BYTEPRIM_ARRAY;
 	}
 
 	/** UTF-8 */
-	public static final String toString(byte[] bytes) {
-		return new String(bytes, StandardCharsets.UTF_8);
+	public static final String toString( byte[] bytes ) {
+		return new String( bytes, StandardCharsets.UTF_8 );
 	}
 
 	/** UTF-8 */
-	public static final String toString(byte[] bytes, int offset, int length) {
-		return new String(bytes, offset, length, StandardCharsets.UTF_8);
+	public static final String toString( byte[] bytes, int offset, int length ) {
+		return new String( bytes, offset, length, StandardCharsets.UTF_8 );
 	}
 }

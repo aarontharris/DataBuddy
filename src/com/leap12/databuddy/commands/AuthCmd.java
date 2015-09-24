@@ -15,44 +15,44 @@ public class AuthCmd extends StrCommand<Role> {
 	private final int beginIndex;
 
 	public AuthCmd() {
-		super("auth",
+		super( "auth",
 				"auth request_auth=[ROLE]&username=[USERNAME]&password=[PASSWORD]",
-				Role.class);
-		beginIndex = (getName() + " ").length();
+				Role.class );
+		beginIndex = ( getName() + " " ).length();
 	}
 
 	@Override
-	public CmdResponse<Role> executeCommand(BaseConnectionDelegate connection, String msg) {
-		final CmdResponseMutable<Role> response = new CmdResponseMutable<>(Role.class);
+	public CmdResponse<Role> executeCommand( BaseConnectionDelegate connection, String msg ) {
+		final CmdResponseMutable<Role> response = new CmdResponseMutable<>( Role.class );
 		try {
-			msg = msg.substring(beginIndex, msg.length()); // from=zero-based-inclusive, to=zero-based-inclusive
-			Map<String, String> fields = StrUtl.toMap(msg, "=", "&");
-			String roleStr = fields.get("request_auth");
+			msg = msg.substring( beginIndex, msg.length() ); // from=zero-based-inclusive, to=zero-based-inclusive
+			Map<String, String> fields = StrUtl.toMap( msg, "=", "&" );
+			String roleStr = fields.get( "request_auth" );
 
 			try {
-				Role role = Role.fromValue(roleStr);
-				response.setValue(role);
-			} catch (NullPointerException | IllegalArgumentException e) {
-				response.setError(e, RequestStatus.FAIL_INVALID_CMD_ARGUMENTS, "Invalid Role " + roleStr);
-			} catch (Exception e) {
-				response.setError(e, RequestStatus.FAIL_UNKNOWN, "Something went wrong when parsing the role " + roleStr);
+				Role role = Role.fromValue( roleStr );
+				response.setValue( role );
+			} catch ( NullPointerException | IllegalArgumentException e ) {
+				response.setError( e, RequestStatus.FAIL_INVALID_CMD_ARGUMENTS, "Invalid Role " + roleStr );
+			} catch ( Exception e ) {
+				response.setError( e, RequestStatus.FAIL_UNKNOWN, "Something went wrong when parsing the role " + roleStr );
 			}
 
-			if (response.getValue() != null) {
-				String userStr = fields.get("username");
-				String passStr = fields.get("password");
-				Log.d("Received Request of Role %s for '%s' '%s'", roleStr, userStr, passStr);
+			if ( response.getValue() != null ) {
+				String userStr = fields.get( "username" );
+				String passStr = fields.get( "password" );
+				Log.d( "Received Request of Role %s for '%s' '%s'", roleStr, userStr, passStr );
 
-				Preconditions.isValidArg(StrUtl.isNotEmptyAll(roleStr, userStr, passStr)); // throws if empty
+				Preconditions.isValidArg( StrUtl.isNotEmptyAll( roleStr, userStr, passStr ) ); // throws if empty
 
-				response.setArgs().putString("username", userStr);
-				response.setArgs().putString("password", userStr);
-				response.setStatus(RequestStatus.SUCCESS);
+				response.setArgs().putString( "username", userStr );
+				response.setArgs().putString( "password", userStr );
+				response.setStatus( RequestStatus.SUCCESS );
 			}
-		} catch (IllegalArgumentException e) {
-			response.setError(e, RequestStatus.FAIL_INVALID_CMD_ARGUMENTS, e.getMessage());
-		} catch (Exception e) {
-			response.setError(e, RequestStatus.FAIL_INVALID_CMD_FORMAT);
+		} catch ( IllegalArgumentException e ) {
+			response.setError( e, RequestStatus.FAIL_INVALID_CMD_ARGUMENTS, e.getMessage() );
+		} catch ( Exception e ) {
+			response.setError( e, RequestStatus.FAIL_INVALID_CMD_FORMAT );
 		}
 		return response;
 	}

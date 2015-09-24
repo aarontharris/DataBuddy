@@ -6,85 +6,85 @@ public class Props implements PropsRead, PropsWrite {
 	public static final Props EMPTY = new Props();
 
 	@Override
-	public void putAll(Properties sysProps) {
+	public void putAll( Properties sysProps ) {
 	}
 
 	@Override
-	public void putString(String key, String val) {
+	public void putString( String key, String val ) {
 	}
 
 	@Override
-	public void putBoolean(String key, Boolean val) {
+	public void putBoolean( String key, Boolean val ) {
 	}
 
 	@Override
-	public void putInteger(String key, Integer val) {
+	public void putInteger( String key, Integer val ) {
 	}
 
 	@Override
-	public void putLong(String key, Long val) {
+	public void putLong( String key, Long val ) {
 	}
 
 	@Override
-	public void putFloat(String key, Float val) {
+	public void putFloat( String key, Float val ) {
 	}
 
 	@Override
-	public void putDouble(String key, Double val) {
+	public void putDouble( String key, Double val ) {
 	}
 
 	@Override
-	public String getString(String key) {
+	public String getString( String key ) {
 		return null;
 	}
 
 	@Override
-	public Boolean getBoolean(String key) {
+	public Boolean getBoolean( String key ) {
 		return null;
 	}
 
 	@Override
-	public boolean getBoolean(String key, boolean defVal) {
+	public boolean getBoolean( String key, boolean defVal ) {
 		return defVal;
 	}
 
 	@Override
-	public int getInt(String key, int defVal) {
+	public int getInt( String key, int defVal ) {
 		return defVal;
 	}
 
 	@Override
-	public Integer getInteger(String key) {
+	public Integer getInteger( String key ) {
 		return null;
 	}
 
 	@Override
-	public long getLong(String key, long defVal) {
+	public long getLong( String key, long defVal ) {
 		return defVal;
 	}
 
 	@Override
-	public Long getLong(String key) {
+	public Long getLong( String key ) {
 		return null;
 	}
 
 	@Override
-	public float getFloat(String key, float defVal) {
+	public float getFloat( String key, float defVal ) {
 		return defVal;
 	}
 
 	@Override
-	public Float getFloat(String key) {
+	public Float getFloat( String key ) {
 		return null;
 	}
 
 	@Override
-	public double getDouble(String key, double defVal) {
+	public double getDouble( String key, double defVal ) {
 		return defVal;
 	}
 
 	@Override
-	public Double getDouble(String key) {
+	public Double getDouble( String key ) {
 		return null;
 	}
 

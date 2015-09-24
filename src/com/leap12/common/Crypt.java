@@ -18,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class Crypt {
 
-	public static void main(String[] args) throws Exception {
+	public static void main( String[] args ) throws Exception {
 		test();
 	}
 
@@ -36,12 +36,12 @@ public class Crypt {
 			inMsg = "Hello World";
 			keyPhrase = user + pass + SALT;
 
-			encMsg = crypt.encryptString(keyPhrase, inMsg);
-			outMsg = crypt.decryptString(keyPhrase, encMsg);
+			encMsg = crypt.encryptString( keyPhrase, inMsg );
+			outMsg = crypt.decryptString( keyPhrase, encMsg );
 
-			Log.d("'%s', '%s', '%s', '%s', matched=%s", user, pass, inMsg, outMsg, inMsg.equals(outMsg));
-		} catch (BadPaddingException e) {
-			Log.e("Invalid Username or Password");
+			Log.d( "'%s', '%s', '%s', '%s', matched=%s", user, pass, inMsg, outMsg, inMsg.equals( outMsg ) );
+		} catch ( BadPaddingException e ) {
+			Log.e( "Invalid Username or Password" );
 		}
 	}
 
@@ -49,23 +49,23 @@ public class Crypt {
 
 	/** Uses {@link StandardCharsets#UTF_8} by default */
 	public Crypt() {
-		this(StandardCharsets.UTF_8);
+		this( StandardCharsets.UTF_8 );
 	}
 
 	/** @see {@link StandardCharsets} */
-	public Crypt(Charset charSet) {
+	public Crypt( Charset charSet ) {
 		this.mCharSet = charSet;
 	}
 
-	private SecretKeySpec getKey(String keyPhrase) throws NoSuchAlgorithmException {
-		byte[] key = (keyPhrase).getBytes(mCharSet);
+	private SecretKeySpec getKey( String keyPhrase ) throws NoSuchAlgorithmException {
+		byte[] key = ( keyPhrase ).getBytes( mCharSet );
 
 		// 10ms the first time
-		MessageDigest sha = MessageDigest.getInstance("SHA-1"); // FIXME: SHA-2 ?
-		key = sha.digest(key);
-		key = Arrays.copyOf(key, 16); // use only first 128 bit
+		MessageDigest sha = MessageDigest.getInstance( "SHA-1" ); // FIXME: SHA-2 ?
+		key = sha.digest( key );
+		key = Arrays.copyOf( key, 16 ); // use only first 128 bit
 
-		SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+		SecretKeySpec secretKeySpec = new SecretKeySpec( key, "AES" );
 		return secretKeySpec;
 	}
 
@@ -79,12 +79,12 @@ public class Crypt {
 	 * @throws IllegalBlockSizeException
 	 * @throws BadPaddingException
 	 */
-	public byte[] encrypt(String keyPhrase, byte[] unencryptedMessage) throws
+	public byte[] encrypt( String keyPhrase, byte[] unencryptedMessage ) throws
 			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-		SecretKeySpec secretKeySpec = getKey(keyPhrase);
-		Cipher cipher = Cipher.getInstance("AES"); // says getInstance(), means newInstance()
-		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-		byte[] encryptedMessage = cipher.doFinal(unencryptedMessage);
+		SecretKeySpec secretKeySpec = getKey( keyPhrase );
+		Cipher cipher = Cipher.getInstance( "AES" ); // says getInstance(), means newInstance()
+		cipher.init( Cipher.ENCRYPT_MODE, secretKeySpec );
+		byte[] encryptedMessage = cipher.doFinal( unencryptedMessage );
 		return encryptedMessage;
 	}
 
@@ -98,9 +98,9 @@ public class Crypt {
 	 * @throws IllegalBlockSizeException
 	 * @throws BadPaddingException
 	 */
-	public byte[] encryptString(String keyPhrase, String unencryptedMessage) throws
+	public byte[] encryptString( String keyPhrase, String unencryptedMessage ) throws
 			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-		return encrypt(keyPhrase, unencryptedMessage.getBytes(mCharSet));
+		return encrypt( keyPhrase, unencryptedMessage.getBytes( mCharSet ) );
 	}
 
 	/**
@@ -113,12 +113,12 @@ public class Crypt {
 	 * @throws IllegalBlockSizeException
 	 * @throws BadPaddingException
 	 */
-	public byte[] decrypt(String keyPhrase, byte[] encryptedMessage) throws
+	public byte[] decrypt( String keyPhrase, byte[] encryptedMessage ) throws
 			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-		SecretKeySpec secretKeySpec = getKey(keyPhrase);
-		Cipher cipher = Cipher.getInstance("AES"); // says getInstance(), means newInstance()
-		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-		byte[] unencryptedmessage = cipher.doFinal(encryptedMessage);
+		SecretKeySpec secretKeySpec = getKey( keyPhrase );
+		Cipher cipher = Cipher.getInstance( "AES" ); // says getInstance(), means newInstance()
+		cipher.init( Cipher.DECRYPT_MODE, secretKeySpec );
+		byte[] unencryptedmessage = cipher.doFinal( encryptedMessage );
 		return unencryptedmessage;
 	}
 
@@ -132,8 +132,8 @@ public class Crypt {
 	 * @throws IllegalBlockSizeException
 	 * @throws BadPaddingException
 	 */
-	public String decryptString(String keyPhrase, byte[] encryptedMessage) throws
+	public String decryptString( String keyPhrase, byte[] encryptedMessage ) throws
 			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-		return new String(decrypt(keyPhrase, encryptedMessage), mCharSet);
+		return new String( decrypt( keyPhrase, encryptedMessage ), mCharSet );
 	}
 }

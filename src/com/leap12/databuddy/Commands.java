@@ -22,15 +22,17 @@ public final class Commands {
 			return this.name();
 		}
 
-		public static Role fromValue(String value) throws NullPointerException, IllegalArgumentException {
-			return Role.valueOf(value);
+		public static Role fromValue( String value ) throws NullPointerException, IllegalArgumentException {
+			return Role.valueOf( value );
 		}
 	}
+
+
 
 	public static abstract class Command<IN, OUT> {
 		private final Class<OUT> mType;
 
-		public Command(Class<OUT> type) {
+		public Command( Class<OUT> type ) {
 			this.mType = type;
 		}
 
@@ -57,23 +59,26 @@ public final class Commands {
 		 * @param in
 		 * @return 0.0 to 1.0 where 0.0 is 0% match and 1.0 is 100% match
 		 */
-		public abstract float isCommand(IN in);
+		public abstract float isCommand( IN in );
 
 		/**
 		 * <B>Never Throws</b> instead see {@link CmdResponse#getError()} and {@link CmdResponse#getStatus()}
+		 * 
 		 * @param connection
 		 * @param msg
 		 * @return
 		 */
-		public abstract CmdResponse<OUT> executeCommand(BaseConnectionDelegate connection, IN input);
+		public abstract CmdResponse<OUT> executeCommand( BaseConnectionDelegate connection, IN input );
 	}
+
+
 
 	public static abstract class StrCommand<OUT> extends Command<String, OUT> {
 		private final String mCmdName;
 		private final String mCmdFormat;
 
-		public StrCommand(String cmdName, String cmdFormat, Class<OUT> type) {
-			super(type);
+		public StrCommand( String cmdName, String cmdFormat, Class<OUT> type ) {
+			super( type );
 			this.mCmdName = cmdName;
 			this.mCmdFormat = cmdFormat;
 		}
@@ -87,48 +92,56 @@ public final class Commands {
 		}
 
 		@Override
-		public float isCommand(String in) {
-			return StrUtl.isNotEmpty(in) && in.startsWith(getName()) ? 1f : 0f;
+		public float isCommand( String in ) {
+			return StrUtl.isNotEmpty( in ) && in.startsWith( getName() ) ? 1f : 0f;
 		}
 	}
 
-	@SuppressWarnings("serial")
+
+
+	@SuppressWarnings( "serial" )
 	public static class DBuddyException extends Exception {
-		public DBuddyException(String msg, Throwable e) {
-			super(msg, e);
+		public DBuddyException( String msg, Throwable e ) {
+			super( msg, e );
 		}
 	}
 
-	@SuppressWarnings("serial")
+
+
+	@SuppressWarnings( "serial" )
 	public static class DBuddyFormatException extends DBuddyException {
-		public DBuddyFormatException(String msg, Throwable e) {
-			super(msg, e);
+		public DBuddyFormatException( String msg, Throwable e ) {
+			super( msg, e );
 		}
 	}
+
+
 
 	public static class DBuddyArgsException extends DBuddyException {
-		public DBuddyArgsException(String msg, Throwable e) {
-			super(msg, e);
+		public DBuddyArgsException( String msg, Throwable e ) {
+			super( msg, e );
 		}
 	}
 
-	public static RequestStatus toRequestStatus(Throwable e) {
-		if (e instanceof DBuddyArgsException) {
+	public static RequestStatus toRequestStatus( Throwable e ) {
+		if ( e instanceof DBuddyArgsException ) {
 			return RequestStatus.FAIL_INVALID_CMD_ARGUMENTS;
-		} else if (e instanceof DBuddyException) {
+		} else if ( e instanceof DBuddyException ) {
 			return RequestStatus.FAIL_INVALID_CMD_FORMAT;
 		}
 		return RequestStatus.FAIL_UNKNOWN;
 	}
 
+
+
 	public static enum RequestStatus {
-		SUCCESS(0, "Success"), //
-		UNFULFILLED(1, "Unfulfilled"), //
-		FAIL_UNKNOWN(2, "Internal Failure please log a bug."), //
-		FAIL_INVALID_CMD(3, "Invalid Command"), //
-		FAIL_INVALID_CMD_FORMAT(4, "Invalid Command Format"), //
-		FAIL_INVALID_CMD_ARGUMENTS(5, "Invalid Command Arguments"), //
-		FAIL_NOT_AUTHORIZED(6, "Not Authorized"), //
+		SUCCESS( 0, "Success" ), //
+		UNFULFILLED( 1, "Unfulfilled" ), //
+		FAIL_UNKNOWN( 2, "Internal Failure please log a bug." ), //
+		FAIL_INVALID_CMD( 3, "Invalid Command" ), //
+		FAIL_INVALID_CMD_FORMAT( 4, "Invalid Command Format" ), //
+		FAIL_INVALID_CMD_ARGUMENTS( 5, "Invalid Command Arguments" ), //
+		FAIL_NOT_AUTHORIZED( 6, "Not Authorized" ), //
 		;
 
 		private static final RequestStatus[] idMap = new RequestStatus[] {
@@ -144,7 +157,7 @@ public final class Commands {
 		private final int mCode;
 		private final String mMessage;
 
-		RequestStatus(int code, String message) {
+		RequestStatus( int code, String message ) {
 			this.mCode = code;
 			this.mMessage = message;
 		}
@@ -157,10 +170,12 @@ public final class Commands {
 			return mMessage;
 		}
 
-		public static RequestStatus fromCode(int code) {
+		public static RequestStatus fromCode( int code ) {
 			return idMap[code];
 		}
 	}
+
+
 
 	public static class CmdResponse<T> {
 
@@ -169,61 +184,61 @@ public final class Commands {
 		 * However unlike the builder pattern, validation is the responsibility of the creator (this is intentional).
 		 */
 		public static class CmdResponseMutable<T> extends CmdResponse<T> {
-			public CmdResponseMutable(Class<T> type) {
-				super(type);
+			public CmdResponseMutable( Class<T> type ) {
+				super( type );
 			}
 
-			public CmdResponseMutable(Class<T> type, T value, RequestStatus status) {
-				super(type, value, status);
+			public CmdResponseMutable( Class<T> type, T value, RequestStatus status ) {
+				super( type, value, status );
 			}
 
-			public CmdResponseMutable(Class<T> type, T value, RequestStatus status, Throwable error) {
-				super(type, value, status, error);
+			public CmdResponseMutable( Class<T> type, T value, RequestStatus status, Throwable error ) {
+				super( type, value, status, error );
 			}
 
-			public CmdResponseMutable(Class<T> type, T value, RequestStatus status, Throwable error, Props args) {
-				super(type, value, status, error, args);
+			public CmdResponseMutable( Class<T> type, T value, RequestStatus status, Throwable error, Props args ) {
+				super( type, value, status, error, args );
 			}
 
-			public void setValue(T value) {
+			public void setValue( T value ) {
 				this.mValue = value;
 			}
 
-			public void setValue(T value, RequestStatus status) {
-				setValue(value);
-				setStatus(status);
+			public void setValue( T value, RequestStatus status ) {
+				setValue( value );
+				setStatus( status );
 			}
 
-			public void setStatus(RequestStatus status) {
+			public void setStatus( RequestStatus status ) {
 				this.mStatus = status;
 			}
 
-			public void setStatusMessage(String statusMessage) {
+			public void setStatusMessage( String statusMessage ) {
 				this.mStatusMessage = statusMessage;
 			}
 
-			public void setError(Throwable error) {
+			public void setError( Throwable error ) {
 				this.mError = error;
 			}
 
-			public void setStatus(RequestStatus status, String statusMessage) {
-				setStatus(status);
-				setStatusMessage(statusMessage);
+			public void setStatus( RequestStatus status, String statusMessage ) {
+				setStatus( status );
+				setStatusMessage( statusMessage );
 			}
 
-			public void setError(Throwable error, RequestStatus status, String statusMessage) {
-				setError(error);
-				setStatus(status);
-				setStatusMessage(statusMessage);
+			public void setError( Throwable error, RequestStatus status, String statusMessage ) {
+				setError( error );
+				setStatus( status );
+				setStatusMessage( statusMessage );
 			}
 
-			public void setError(Throwable error, RequestStatus status) {
-				setError(error);
-				setStatus(status);
+			public void setError( Throwable error, RequestStatus status ) {
+				setError( error );
+				setStatus( status );
 			}
 
 			public final PropsWrite setArgs() {
-				if (mArgs == Props.EMPTY) {
+				if ( mArgs == Props.EMPTY ) {
 					mArgs = new PropsReadWrite();
 				}
 				return mArgs;
@@ -237,26 +252,26 @@ public final class Commands {
 		Throwable mError;
 		Props mArgs;
 
-		private CmdResponse(Class<T> type) {
-			this(type, null, RequestStatus.FAIL_UNKNOWN);
+		private CmdResponse( Class<T> type ) {
+			this( type, null, RequestStatus.FAIL_UNKNOWN );
 		}
 
-		public CmdResponse(Class<T> type, T value, RequestStatus status) {
-			this(type, value, status, null);
+		public CmdResponse( Class<T> type, T value, RequestStatus status ) {
+			this( type, value, status, null );
 		}
 
-		public CmdResponse(Class<T> type, T value, RequestStatus status, Throwable error) {
-			this(type, value, status, error, Props.EMPTY);
+		public CmdResponse( Class<T> type, T value, RequestStatus status, Throwable error ) {
+			this( type, value, status, error, Props.EMPTY );
 		}
 
-		public CmdResponse(Class<T> type, T value, RequestStatus status, Throwable error, Props args) {
+		public CmdResponse( Class<T> type, T value, RequestStatus status, Throwable error, Props args ) {
 			this.mType = type;
 			this.mValue = value;
 			this.mStatus = status;
 			this.mError = error;
 			this.mArgs = args;
 			this.mStatusMessage = StrUtl.EMPTY;
-			if (this.mArgs == null) {
+			if ( this.mArgs == null ) {
 				this.mArgs = Props.EMPTY;
 			}
 		}
@@ -302,7 +317,7 @@ public final class Commands {
 	private Commands() {
 	}
 
-	public List<Command<?, ?>> getCommands(Role role) {
+	public List<Command<?, ?>> getCommands( Role role ) {
 		return Collections.emptyList();
 	}
 

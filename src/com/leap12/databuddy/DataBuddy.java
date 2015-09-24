@@ -22,18 +22,18 @@ public final class DataBuddy {
 	private CountDownLatch latch = null;
 
 	private DataBuddy() {
-		Config.get().initialize(System.getProperties());
+		Config.get().initialize( System.getProperties() );
 	}
 
 	public synchronized void startup() throws Exception {
-		startup(HandshakeDelegate.class);
+		startup( HandshakeDelegate.class );
 	}
 
 	/**
 	 * @param connectionDelegate Who will be handling the connection messages. The class must have an empty constructor.
 	 */
-	public synchronized void startup(Class<? extends BaseConnectionDelegate> connectionDelegateClass) throws Exception {
-		if (!running) {
+	public synchronized void startup( Class<? extends BaseConnectionDelegate> connectionDelegateClass ) throws Exception {
+		if ( !running ) {
 			running = true;
 			ServerSocket serverSocket = null;
 			int port = 0;
@@ -41,34 +41,34 @@ public final class DataBuddy {
 			try {
 				connections = new WeakHashMap<>();
 				port = Config.get().getPort();
-				serverSocket = new ServerSocket(port);
-				latch = new CountDownLatch(1);
+				serverSocket = new ServerSocket( port );
+				latch = new CountDownLatch( 1 );
 
 				try {
-					Log.d("Listening on Port %s", port);
+					Log.d( "Listening on Port %s", port );
 					Socket socket = null;
-					while (running && (socket = serverSocket.accept()) != null) { // FIXME: block failed connections for 10 seconds
-						ClientConnection connection = new ClientConnection(socket);
+					while ( running && ( socket = serverSocket.accept() ) != null ) { // FIXME: block failed connections for 10 seconds
+						ClientConnection connection = new ClientConnection( socket );
 						BaseConnectionDelegate delegate = connectionDelegateClass.newInstance();
-						connection.setDelegate(delegate);
+						connection.setDelegate( delegate );
 						connection.run();
-						connections.put(connection, System.currentTimeMillis());
+						connections.put( connection, System.currentTimeMillis() );
 					}
 
-					Log.d("Waiting on latch");
-					if (latch.await(1000, TimeUnit.MILLISECONDS)) {
-						Log.d("done with latch");
+					Log.d( "Waiting on latch" );
+					if ( latch.await( 1000, TimeUnit.MILLISECONDS ) ) {
+						Log.d( "done with latch" );
 					} else {
-						Log.d("cant wait anymore for latch");
+						Log.d( "cant wait anymore for latch" );
 					}
-				} catch (Exception e) {
-					Log.e(e, "Trouble while listening on port %s", port);
+				} catch ( Exception e ) {
+					Log.e( e, "Trouble while listening on port %s", port );
 				}
-			} catch (Exception e) {
-				Log.e(e, "Trouble opening port %s", port);
+			} catch ( Exception e ) {
+				Log.e( e, "Trouble opening port %s", port );
 			} finally {
-				if (serverSocket != null) {
-					Log.d("Disconnecting Port %s", port);
+				if ( serverSocket != null ) {
+					Log.d( "Disconnecting Port %s", port );
 					serverSocket.close();
 				}
 			}
@@ -76,25 +76,25 @@ public final class DataBuddy {
 	}
 
 	public void shutdown() {
-		Log.d("Shutting Down");
+		Log.d( "Shutting Down" );
 		try {
-			if (running) {
+			if ( running ) {
 				running = false;
 				WeakHashMap<ClientConnection, Long> connections = this.connections;
 				this.connections = null;
-				for (ClientConnection connection : connections.keySet()) {
+				for ( ClientConnection connection : connections.keySet() ) {
 					try {
-						Log.d("Shutting Down Connection");
-						if (connection != null) {
+						Log.d( "Shutting Down Connection" );
+						if ( connection != null ) {
 							connection.stop();
 						}
-					} catch (Exception e) {
-						Log.e(e);
+					} catch ( Exception e ) {
+						Log.e( e );
 					}
 				}
 			}
 		} finally {
-			if (latch != null) {
+			if ( latch != null ) {
 				latch.countDown();
 			}
 		}
@@ -102,20 +102,20 @@ public final class DataBuddy {
 
 	public int getConnectionCount() {
 		int count = 0;
-		for (ClientConnection connection : connections.keySet()) {
-			if (connection != null) {
-				count++;
+		for ( ClientConnection connection : connections.keySet() ) {
+			if ( connection != null ) {
+				count++ ;
 			}
 		}
 		return count;
 	}
 
-	public void relayMessage(String message, ClientConnection src) {
+	public void relayMessage( String message, ClientConnection src ) {
 		Set<ClientConnection> connections = this.connections.keySet();
-		for (ClientConnection conn : connections) {
-			if (!src.equals(conn)) {
-				if (conn.isSocketOpen()) {
-					conn.writeLnMsgSafe(message);
+		for ( ClientConnection conn : connections ) {
+			if ( !src.equals( conn ) ) {
+				if ( conn.isSocketOpen() ) {
+					conn.writeLnMsgSafe( message );
 				}
 			}
 		}

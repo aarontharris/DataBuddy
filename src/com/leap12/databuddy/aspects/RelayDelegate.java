@@ -24,26 +24,27 @@ public class RelayDelegate extends BaseConnectionDelegate {
 	}
 
 	@Override
-	protected void onAttached(ClientConnection connection) throws Exception {
-		connection.setInactivityTimeout(0);
-		connection.setKeepAlive(true);
+	protected void onAttached( ClientConnection connection ) throws Exception {
+		connection.setInactivityTimeout( 0 );
+		connection.setKeepAlive( true );
 	}
 
 	@Override
-	protected void onReceivedMsg(String msg) throws Exception {
-		for (StrCommand<?> cmd : commands) {
-			if (1.0f == cmd.isCommand(msg)) {
-				CmdResponse<?> response = cmd.executeCommand(this, msg);
-				writeResponse(response);
-				if (response.getError() != null) {
-					Log.e(response.getError());
+	protected void onReceivedMsg( String msg ) throws Exception {
+		for ( StrCommand<?> cmd : commands ) {
+			if ( 1.0f == cmd.isCommand( msg ) ) {
+				CmdResponse<?> response = cmd.executeCommand( this, msg );
+				writeResponse( response );
+				if ( response.getError() != null ) {
+					Log.e( response.getError() );
 				}
 			}
 		}
 	}
+
 	@Override
 	protected void onReceivedQuit() throws Exception {
-		writeLnMsgSafe("quitting");
+		writeLnMsgSafe( "quitting" );
 	}
 
 }

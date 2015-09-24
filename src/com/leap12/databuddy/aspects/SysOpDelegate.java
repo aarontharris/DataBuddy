@@ -14,14 +14,14 @@ public class SysOpDelegate extends UserDelegate {
 	}
 
 	@Override
-	protected void onReceivedMsg(String msg) throws Exception {
-		if ("get connection count".equals(msg)) {
+	protected void onReceivedMsg( String msg ) throws Exception {
+		if ( "get connection count".equals( msg ) ) {
 			int count = DataBuddy.get().getConnectionCount();
-			writeLnMsgSafe(String.valueOf(count));
-		} else if ("gc".equals(msg)) {
+			writeLnMsgSafe( String.valueOf( count ) );
+		} else if ( "gc".equals( msg ) ) {
 			System.gc();
 		} else {
-			super.onReceivedMsg(msg);
+			super.onReceivedMsg( msg );
 		}
 	}
 

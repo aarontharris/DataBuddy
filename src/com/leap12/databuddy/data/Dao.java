@@ -19,32 +19,32 @@ public final class Dao implements DataStore {
 	// By extending it, we expose SqliteDataStoreManagers protected constructor, so only the Dao will secretely create an instance
 	// As we don't really want the SqliteDataStoreManager exposed to the rest of the code base since it's supposed to be a swappable part.
 	// The rest of the code shouldn't care about the DataStoreManager's true backing.
-	private static final DataStoreManager dbFactory = new SqliteDataStoreManager("dbBuddy.db") {
-	};
+	private static final DataStoreManager dbFactory = new SqliteDataStoreManager( "dbBuddy.db" ) {};
 
 	private static final Gson gson = new GsonBuilder().create();
 	private static final WeakHashMap<BaseConnectionDelegate, Dao> daos = new WeakHashMap<>();
 	private static Lock lock = new ReentrantLock();
 
 	/** Thread safe */
-	public static final Dao getInstance(BaseConnectionDelegate connection) {
+	public static final Dao getInstance( BaseConnectionDelegate connection ) {
 		lock.lock(); // this should be incredibly fast so lets not bother with the reentranceness
 		try {
-			Dao dao = daos.get(connection);
-			if (dao == null) {
-				dao = new Dao(dbFactory.attainDataStore());
-				daos.put(connection, dao);
+			Dao dao = daos.get( connection );
+			if ( dao == null ) {
+				dao = new Dao( dbFactory.attainDataStore() );
+				daos.put( connection, dao );
 			}
 			return dao;
 		} finally {
 			lock.unlock();
 		}
 	}
+
 	/** Thread safe */
-	public static final void releaseInstance(BaseConnectionDelegate connection) {
+	public static final void releaseInstance( BaseConnectionDelegate connection ) {
 		lock.lock(); // this should be incredibly fast so lets not bother with the reentranceness
 		try {
-			daos.remove(connection);
+			daos.remove( connection );
 		} finally {
 			lock.unlock();
 		}
@@ -52,51 +52,62 @@ public final class Dao implements DataStore {
 
 	private final DataStore mDataStore;
 
-	private Dao(DataStore store) {
+	private Dao( DataStore store ) {
 		this.mDataStore = store;
 	}
 
 	@Override
-	public void saveString(String topic, String subtopic, String key, String value) throws Exception {
-		mDataStore.saveString(topic, subtopic, key, value);
+	public void saveString( String topic, String subtopic, String key, String value ) throws Exception {
+		mDataStore.saveString( topic, subtopic, key, value );
 	}
+
 	@Override
-	public String loadString(String topic, String subtopic, String key) throws Exception {
-		return mDataStore.loadString(topic, subtopic, key);
+	public String loadString( String topic, String subtopic, String key ) throws Exception {
+		return mDataStore.loadString( topic, subtopic, key );
 	}
+
 	@Override
-	public void saveBlob(String topic, String subtopic, String key, byte[] value) throws Exception {
+	public void saveBlob( String topic, String subtopic, String key, byte[] value ) throws Exception {
 	}
+
 	@Override
-	public byte[] loadBlob(String topic, String subtopic, String key) throws Exception {
+	public byte[] loadBlob( String topic, String subtopic, String key ) throws Exception {
 		return null;
 	}
+
 	@Override
-	public void saveInt(String topic, String subtopic, String key, int value) throws Exception {
+	public void saveInt( String topic, String subtopic, String key, int value ) throws Exception {
 	}
+
 	@Override
-	public int loadInt(String topic, String subtopic, String key) throws Exception {
+	public int loadInt( String topic, String subtopic, String key ) throws Exception {
 		return 0;
 	}
+
 	@Override
-	public void saveBoolean(String topic, String subtopic, String key, boolean value) throws Exception {
+	public void saveBoolean( String topic, String subtopic, String key, boolean value ) throws Exception {
 	}
+
 	@Override
-	public boolean loadBoolean(String topic, String subtopic, String key) throws Exception {
+	public boolean loadBoolean( String topic, String subtopic, String key ) throws Exception {
 		return false;
 	}
+
 	@Override
-	public void saveFloat(String topic, String subtopic, String key, byte[] value) throws Exception {
+	public void saveFloat( String topic, String subtopic, String key, byte[] value ) throws Exception {
 	}
+
 	@Override
-	public float loadFloat(String topic, String subtopic, String key) throws Exception {
+	public float loadFloat( String topic, String subtopic, String key ) throws Exception {
 		return 0;
 	}
+
 	@Override
-	public void saveJSONObject(String topic, String subtopic, String key, JSONObject value) throws Exception {
+	public void saveJSONObject( String topic, String subtopic, String key, JSONObject value ) throws Exception {
 	}
+
 	@Override
-	public JSONObject loadJSONObject(String topic, String subtopic, String key) throws Exception {
+	public JSONObject loadJSONObject( String topic, String subtopic, String key ) throws Exception {
 		return null;
 	}
 

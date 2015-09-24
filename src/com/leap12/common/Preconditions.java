@@ -6,8 +6,8 @@ public class Preconditions {
 	 * @param trueStatement
 	 * @throws IllegalStateException when trueStatement is not true
 	 */
-	public static void isTrueState(boolean trueStatement) throws IllegalStateException {
-		if (!trueStatement) {
+	public static void isTrueState( boolean trueStatement ) throws IllegalStateException {
+		if ( !trueStatement ) {
 			throw new IllegalStateException();
 		}
 	}
@@ -17,9 +17,9 @@ public class Preconditions {
 	 * @param reason
 	 * @throws IllegalStateException when trueStatement is not true
 	 */
-	public static void isTrueState(boolean trueStatement, String reason) throws IllegalStateException {
-		if (!trueStatement) {
-			throw new IllegalStateException(reason);
+	public static void isTrueState( boolean trueStatement, String reason ) throws IllegalStateException {
+		if ( !trueStatement ) {
+			throw new IllegalStateException( reason );
 		}
 	}
 
@@ -27,8 +27,8 @@ public class Preconditions {
 	 * @param trueStatement
 	 * @throws IllegalStateException when trueStatement is not true
 	 */
-	public static void isValidArg(boolean trueStatement) throws IllegalStateException {
-		if (!trueStatement) {
+	public static void isValidArg( boolean trueStatement ) throws IllegalStateException {
+		if ( !trueStatement ) {
 			throw new IllegalArgumentException();
 		}
 	}
@@ -38,9 +38,9 @@ public class Preconditions {
 	 * @param reason
 	 * @throws IllegalStateException when trueStatement is not true
 	 */
-	public static void isValidArg(boolean trueStatement, String reason) throws IllegalStateException {
-		if (!trueStatement) {
-			throw new IllegalArgumentException(reason);
+	public static void isValidArg( boolean trueStatement, String reason ) throws IllegalStateException {
+		if ( !trueStatement ) {
+			throw new IllegalArgumentException( reason );
 		}
 	}
 

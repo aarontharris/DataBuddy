@@ -26,16 +26,17 @@ public final class Config {
 
 	/**
 	 * Initialize or reset the config - best to do this at startup
+	 * 
 	 * @param systemProperties - optional - not validated
 	 */
-	public void initialize(Properties systemProperties) {
+	public void initialize( Properties systemProperties ) {
 		props = new PropsReadWrite();
 
 		// Defaults -- lowest precedence
-		props.putInteger(KEY_port, DEF_port);
+		props.putInteger( KEY_port, DEF_port );
 
 		// System properties -- low precedence - overrides defaults, careful of namespacing conflicts with standard system properties.
-		props.putAll(systemProperties);
+		props.putAll( systemProperties );
 
 		// Config file -- high precedence
 		// props.putAll(configFile); // TODO config file
@@ -46,8 +47,8 @@ public final class Config {
 		// it may seem redundant to put all the properties into a map and then cache them into properties
 		// but we're doing it to allow property precedence
 
-		port = props.getInt(KEY_port, DEF_port);
-		lineSeparator = props.getString(KEY_lineSeparator);
+		port = props.getInt( KEY_port, DEF_port );
+		lineSeparator = props.getString( KEY_lineSeparator );
 	}
 
 	public int getPort() {

@@ -26,28 +26,29 @@ public class UserDelegate extends BaseConnectionDelegate {
 	}
 
 	@Override
-	protected void onAttached(ClientConnection connection) throws Exception {
-		connection.setInactivityTimeout(120000); // 2 minute -- TODO: client will need to detect disconnect and reconnect.
-		connection.setKeepAlive(true);
+	protected void onAttached( ClientConnection connection ) throws Exception {
+		connection.setInactivityTimeout( 120000 ); // 2 minute -- TODO: client will need to detect disconnect and reconnect.
+		connection.setKeepAlive( true );
 	}
 
 	@Override
-	protected void onReceivedMsg(String msg) throws Exception {
-		Log.debugNewlineChars(msg);
+	protected void onReceivedMsg( String msg ) throws Exception {
+		Log.debugNewlineChars( msg );
 
-		for (StrCommand<?> cmd : commands) {
-			if (1.0f == cmd.isCommand(msg)) {
-				CmdResponse<?> response = cmd.executeCommand(this, msg);
-				writeResponse(response);
-				if (response.getError() != null) {
-					Log.e(response.getError());
+		for ( StrCommand<?> cmd : commands ) {
+			if ( 1.0f == cmd.isCommand( msg ) ) {
+				CmdResponse<?> response = cmd.executeCommand( this, msg );
+				writeResponse( response );
+				if ( response.getError() != null ) {
+					Log.e( response.getError() );
 				}
 			}
 		}
 	}
+
 	@Override
 	protected void onReceivedQuit() throws Exception {
-		writeLnMsgSafe("quitting");
+		writeLnMsgSafe( "quitting" );
 	}
 
 }
