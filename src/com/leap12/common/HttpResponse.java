@@ -5,12 +5,13 @@ import java.util.Set;
 
 public class HttpResponse {
 	public static enum HttpStatusCode {
-		CODE_200(200, "OK"),
-		CODE_400(400, "Internal Server Error");
+		CODE_200( 200, "OK" ),
+		CODE_400( 400, "Internal Server Error" );
 
 		private final int code;
 		private final String msg;
-		HttpStatusCode(int code, String msg) {
+
+		HttpStatusCode( int code, String msg ) {
 			this.code = code;
 			this.msg = msg;
 		}
@@ -23,37 +24,37 @@ public class HttpResponse {
 
 	public HttpResponse() {
 		defaultHeaders = new HashSet<>();
-		defaultHeaders.add(new Pair<String, String>("Content-Type", "text/html"));
-		defaultHeaders.add(new Pair<String, String>("Server", "DataBuddy/1.1"));
+		defaultHeaders.add( new Pair<String, String>( "Content-Type", "text/html" ) );
+		defaultHeaders.add( new Pair<String, String>( "Server", "DataBuddy/1.1" ) );
 	}
 
-	public void addHeader(String key, String value) {
-		if (mHeaders == null) {
+	public void addHeader( String key, String value ) {
+		if ( mHeaders == null ) {
 			mHeaders = new HashSet<>();
 		}
-		mHeaders.add(new Pair<String, String>(key, value));
+		mHeaders.add( new Pair<String, String>( key, value ) );
 	}
 
-	public void setStatusCode(HttpStatusCode code) {
+	public void setStatusCode( HttpStatusCode code ) {
 		this.mCode = code;
 	}
 
 	public StringBuilder getBodyBuilder() {
-		if (mBodyBuilder == null) {
-			setBody(null); // initialize the builder
+		if ( mBodyBuilder == null ) {
+			setBody( null ); // initialize the builder
 		}
 		return mBodyBuilder;
 	}
 
-	public void setBody(String body) {
+	public void setBody( String body ) {
 		mBodyBuilder = new StringBuilder();
-		if (body != null) {
-			mBodyBuilder.append(body);
+		if ( body != null ) {
+			mBodyBuilder.append( body );
 		}
 	}
 
-	public void appendBody(String string) {
-		getBodyBuilder().append(string);
+	public void appendBody( String string ) {
+		getBodyBuilder().append( string );
 	}
 
 	@Override
@@ -62,20 +63,22 @@ public class HttpResponse {
 		StringBuilder out = new StringBuilder();
 
 		Set<Pair<String, String>> headers = new HashSet<>();
-		headers.addAll(mHeaders); // precedence over defaults
-		headers.addAll(defaultHeaders); // does not overwrite
+		if ( mHeaders != null ) {
+			headers.addAll( mHeaders ); // precedence over defaults
+		}
+		headers.addAll( defaultHeaders ); // does not overwrite
 
-		out.append("HTTP/1.1 " + mCode.code + " " + mCode.msg + "\r\n");
-		for (Pair<String, String> pair : headers) {
-			if ("Content-Length".equals(pair.a)) {
+		out.append( "HTTP/1.1 " + mCode.code + " " + mCode.msg + "\r\n" );
+		for ( Pair<String, String> pair : headers ) {
+			if ( "Content-Length".equals( pair.a ) ) {
 				// skip
 			} else {
-				out.append(pair.a + ": " + pair.b + "\r\n");
+				out.append( pair.a + ": " + pair.b + "\r\n" );
 			}
 		}
-		out.append("Content-Length: " + body.length() + "\r\n");
-		out.append("\r\n");
-		out.append(body);
+		out.append( "Content-Length: " + body.length() + "\r\n" );
+		out.append( "\r\n" );
+		out.append( body );
 		return out.toString();
 	}
 
@@ -83,9 +86,9 @@ public class HttpResponse {
 		String output = "{\"color\": \"green\",\"message\": \"Hello!\", \"message_format\": \"text\", \"notify\": false }";
 
 		HttpResponse resp = new HttpResponse();
-		resp.setStatusCode(HttpStatusCode.CODE_200);
-		resp.addHeader("Content-Type", "application/json;charset=ISO-8859-1");
-		resp.setBody(output);
-		Log.debugNewlineChars(resp.toString());
+		resp.setStatusCode( HttpStatusCode.CODE_200 );
+		resp.addHeader( "Content-Type", "application/json;charset=ISO-8859-1" );
+		resp.setBody( output );
+		Log.debugNewlineChars( resp.toString() );
 	}
 }

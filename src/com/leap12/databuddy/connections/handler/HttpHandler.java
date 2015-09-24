@@ -1,19 +1,20 @@
 package com.leap12.databuddy.connections.handler;
 
 import com.leap12.common.HttpRequest;
-import com.leap12.databuddy.BaseConnection;
+import com.leap12.common.HttpResponse;
+import com.leap12.databuddy.BaseConnectionDelegate;
 
 public class HttpHandler {
 
-	private BaseConnection mConnection;
-	private HttpRequest mRequest;
+	private final BaseConnectionDelegate mConnection;
+	private final HttpRequest mRequest;
 
-	public HttpHandler( BaseConnection connection, HttpRequest request ) {
+	public HttpHandler( BaseConnectionDelegate connection, HttpRequest request ) {
 		this.mConnection = connection;
 		this.mRequest = request;
 	}
 
-	public BaseConnection getConnection() {
+	public BaseConnectionDelegate getConnection() {
 		return mConnection;
 	}
 
@@ -22,13 +23,17 @@ public class HttpHandler {
 	}
 
 	public void handleRequest() throws Exception {
-		getConnection().writeMsg( ""
-				+ "Content-type: text/html\n\n"
-				+ "<html>"
-				+ "<body>"
-				+ "<b>Boo... I'm a webserver...</b>"
-				+ "</body>"
-				+ "</html>\r\n\r\n" );
+		HttpResponse response = new HttpResponse();
+		response.getBodyBuilder().append( "<html>" );
+		response.getBodyBuilder().append( "<body>" );
+		response.getBodyBuilder().append( "<b>Yaay! I'm a webserver!</b>" );
+		response.getBodyBuilder().append( "</br>" );
+		response.getBodyBuilder().append( "</br>" );
+		response.getBodyBuilder().append( getRequest().describe( "<br/>\n" ) );
+		response.getBodyBuilder().append( "</body>" );
+		response.getBodyBuilder().append( "</html>" );
+		getConnection().writeMsg( response.toString() );
 	}
+
 
 }
