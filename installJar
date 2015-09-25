@@ -12,6 +12,6 @@ my $cmd = sprintf( "mvn install:install-file -Dfile=%s -DgroupId=%s -DartifactId
             $pathToFile, $groupId, $artifact, $version, $packaging
             );
 
-print $cmd . "\n";
+#print $cmd . "\n";
 system( $cmd );
 
