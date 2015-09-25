@@ -5,25 +5,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HttpRequest {
-	public static enum HttpMethod {
-
-	}
-
 	private Map<String, String> headers;
 	private Map<String, String> queryParams;
 	private String body;
 	private String description = null;
 
-	public HttpRequest( String response ) {
+	public HttpRequest( String requestStr ) {
 		try {
-			parse( response );
+			parse( requestStr );
 		} catch ( Exception e ) {
-			throw new IllegalStateException( e );
+			// squelch -- use isValid()
 		}
 	}
 
+	public static boolean isPotentiallyHttpRequest( String requestStr ) {
+		if ( StrUtl.isNotEmpty( requestStr ) ) {
+			requestStr.matches( "[Cc]ontent-[Ll]ength: \\d+\r\n" );
+		}
+		return false;
+	}
+
 	public boolean isValid() {
-		return true;
+		throw new UnsupportedOperationException();
 	}
 
 	public String getHeader( String key ) {
@@ -61,11 +64,11 @@ public class HttpRequest {
 		return description;
 	}
 
-	private void parse( String response ) throws Exception {
+	private void parse( String requestStr ) throws Exception {
 		this.headers = new HashMap<>();
 		this.queryParams = Collections.emptyMap();
 
-		String[] httpParts = response.split( "\r\n\r\n" );
+		String[] httpParts = requestStr.split( "\r\n\r\n" );
 		String responseHeaders = httpParts[0];
 
 		String[] lines = responseHeaders.split( "\r\n" );
@@ -109,6 +112,15 @@ public class HttpRequest {
 
 		if ( httpParts.length > 1 ) {
 			body = httpParts[1];
+		}
+	}
+
+	public static void main( String args[] ) {
+		String requestStr = "Content-Length: 6457\r\n";
+		if ( HttpRequest.isPotentiallyHttpRequest( requestStr ) ) {
+			System.out.println( "IS" );
+		} else {
+			System.out.println( "IS NOT" );
 		}
 	}
 }
