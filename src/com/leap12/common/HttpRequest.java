@@ -4,33 +4,48 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+// http://tools.ietf.org/html/rfc2616
 public class HttpRequest {
 	private Map<String, String> headers;
 	private Map<String, String> queryParams;
 	private String body;
 	private String description = null;
 
+	private boolean valid = false;
+
 	public HttpRequest( String requestStr ) {
 		try {
 			parse( requestStr );
+			valid = headers.size() > 0;
 		} catch ( Exception e ) {
-			// squelch -- use isValid()
+			valid = false;
 		}
 	}
 
 	public static boolean isPotentiallyHttpRequest( String requestStr ) {
-		if ( StrUtl.isNotEmpty( requestStr ) ) {
-			requestStr.matches( "[Cc]ontent-[Ll]ength: \\d+\r\n" );
+		if ( StrUtl.contains( requestStr, "HTTP/1.1\r\n" ) ) {
+			if ( requestStr.endsWith( "\r\n\r\n" ) ) {
+				return true;
+			}
+			Log.e( "Request contains HTTP/1.1 but does not end with rnrn" );
 		}
 		return false;
 	}
 
 	public boolean isValid() {
-		throw new UnsupportedOperationException();
+		return valid;
+	}
+
+	public String getBody() {
+		return body;
 	}
 
 	public String getHeader( String key ) {
-		return headers.get( key );
+		return headers.get( key.toLowerCase() );
+	}
+
+	public String getUserAgent() {
+		return getHeader( "user-agent" );
 	}
 
 	/**
@@ -81,7 +96,7 @@ public class HttpRequest {
 				headers.put( "method", method );
 
 				String httpVersion = parts[2].split( "/" )[1];
-				headers.put( "httpVersion", httpVersion );
+				headers.put( "httpversion", httpVersion );
 
 				String pathAndParams = parts[1];
 				String path = pathAndParams;
@@ -99,13 +114,13 @@ public class HttpRequest {
 				String[] parts = line.split( ": ", 2 );
 				String key = parts[0];
 				String value = parts[1];
-				headers.put( key, value );
+				headers.put( key.toLowerCase(), value );
 
-				headers.put( "hostName", value );
+				headers.put( "hostname", value );
 				if ( "host".equalsIgnoreCase( key ) && value.contains( ":" ) ) {
 					String[] nameAndPort = value.split( ":" );
-					headers.put( "hostName", nameAndPort[0] );
-					headers.put( "hostPort", nameAndPort[1] );
+					headers.put( "hostname", nameAndPort[0] );
+					headers.put( "hostport", nameAndPort[1] );
 				}
 			}
 		}
@@ -115,12 +130,4 @@ public class HttpRequest {
 		}
 	}
 
-	public static void main( String args[] ) {
-		String requestStr = "Content-Length: 6457\r\n";
-		if ( HttpRequest.isPotentiallyHttpRequest( requestStr ) ) {
-			System.out.println( "IS" );
-		} else {
-			System.out.println( "IS NOT" );
-		}
-	}
 }

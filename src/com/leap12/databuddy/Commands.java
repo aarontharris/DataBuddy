@@ -2,16 +2,18 @@ package com.leap12.databuddy;
 
 import java.util.Collections;
 import java.util.List;
+
 import com.leap12.common.StrUtl;
 import com.leap12.common.props.Props;
 import com.leap12.common.props.PropsRead;
 import com.leap12.common.props.PropsReadWrite;
 import com.leap12.common.props.PropsWrite;
-import com.leap12.databuddy.commands.AuthCmd;
-import com.leap12.databuddy.commands.GetCmd;
-import com.leap12.databuddy.commands.HelpCmd;
-import com.leap12.databuddy.commands.PutCmd;
-import com.leap12.databuddy.commands.RelayCmd;
+import com.leap12.databuddy.commands.dc.AuthCmd;
+import com.leap12.databuddy.commands.dc.GetCmd;
+import com.leap12.databuddy.commands.dc.HelpCmd;
+import com.leap12.databuddy.commands.dc.PutCmd;
+import com.leap12.databuddy.commands.dc.RelayCmd;
+import com.leap12.databuddy.ex.DBCmdException;
 
 public final class Commands {
 
@@ -97,58 +99,30 @@ public final class Commands {
 		}
 	}
 
-
-
-	@SuppressWarnings( "serial" )
-	public static class DBuddyException extends Exception {
-		public DBuddyException( String msg, Throwable e ) {
-			super( msg, e );
+	public static ResponseStatus toResponseStatus( Exception e ) {
+		if ( e instanceof DBCmdException ) {
+			return ( (DBCmdException) e ).getStatus();
 		}
+		return ResponseStatus.FAIL_UNKNOWN;
 	}
 
 
 
-	@SuppressWarnings( "serial" )
-	public static class DBuddyFormatException extends DBuddyException {
-		public DBuddyFormatException( String msg, Throwable e ) {
-			super( msg, e );
-		}
-	}
-
-
-
-	public static class DBuddyArgsException extends DBuddyException {
-		public DBuddyArgsException( String msg, Throwable e ) {
-			super( msg, e );
-		}
-	}
-
-	public static RequestStatus toRequestStatus( Throwable e ) {
-		if ( e instanceof DBuddyArgsException ) {
-			return RequestStatus.FAIL_INVALID_CMD_ARGUMENTS;
-		} else if ( e instanceof DBuddyException ) {
-			return RequestStatus.FAIL_INVALID_CMD_FORMAT;
-		}
-		return RequestStatus.FAIL_UNKNOWN;
-	}
-
-
-
-	public static enum RequestStatus {
+	public static enum ResponseStatus {
 		SUCCESS( 0, "Success" ), //
 		UNFULFILLED( 1, "Unfulfilled" ), //
 		FAIL_UNKNOWN( 2, "Internal Failure please log a bug." ), //
-		FAIL_INVALID_CMD( 3, "Invalid Command" ), //
+		FAIL_INVALID_CMD_STATE( 3, "Invalid Command State" ), //
 		FAIL_INVALID_CMD_FORMAT( 4, "Invalid Command Format" ), //
 		FAIL_INVALID_CMD_ARGUMENTS( 5, "Invalid Command Arguments" ), //
 		FAIL_NOT_AUTHORIZED( 6, "Not Authorized" ), //
 		;
 
-		private static final RequestStatus[] idMap = new RequestStatus[] {
+		private static final ResponseStatus[] idMap = new ResponseStatus[] {
 				SUCCESS, // 0
 				UNFULFILLED, // 1
 				FAIL_UNKNOWN, // 2
-				FAIL_INVALID_CMD, // 3
+				FAIL_INVALID_CMD_STATE, // 3
 				FAIL_INVALID_CMD_FORMAT, // 4
 				FAIL_INVALID_CMD_ARGUMENTS, // 5
 				FAIL_NOT_AUTHORIZED, // 6
@@ -157,7 +131,7 @@ public final class Commands {
 		private final int mCode;
 		private final String mMessage;
 
-		RequestStatus( int code, String message ) {
+		ResponseStatus( int code, String message ) {
 			this.mCode = code;
 			this.mMessage = message;
 		}
@@ -170,7 +144,7 @@ public final class Commands {
 			return mMessage;
 		}
 
-		public static RequestStatus fromCode( int code ) {
+		public static ResponseStatus fromCode( int code ) {
 			return idMap[code];
 		}
 	}
@@ -184,57 +158,41 @@ public final class Commands {
 		 * However unlike the builder pattern, validation is the responsibility of the creator (this is intentional).
 		 */
 		public static class CmdResponseMutable<T> extends CmdResponse<T> {
+
 			public CmdResponseMutable( Class<T> type ) {
 				super( type );
 			}
 
-			public CmdResponseMutable( Class<T> type, T value, RequestStatus status ) {
-				super( type, value, status );
+			public CmdResponseMutable( Class<T> type, T value ) {
+				super( type, value );
 			}
 
-			public CmdResponseMutable( Class<T> type, T value, RequestStatus status, Throwable error ) {
-				super( type, value, status, error );
+			public CmdResponseMutable( Class<T> type, Exception error ) {
+				super( type, error );
 			}
 
-			public CmdResponseMutable( Class<T> type, T value, RequestStatus status, Throwable error, Props args ) {
-				super( type, value, status, error, args );
+			public CmdResponseMutable( Class<T> type, DBCmdException error ) {
+				super( type, error );
 			}
 
-			public void setValue( T value ) {
-				this.mValue = value;
+			public void setStatusSuccess( T value ) {
+				this.mStatusMessage = "success";
+				this.mStatus = ResponseStatus.SUCCESS;
 			}
 
-			public void setValue( T value, RequestStatus status ) {
-				setValue( value );
-				setStatus( status );
-			}
-
-			public void setStatus( RequestStatus status ) {
-				this.mStatus = status;
-			}
-
-			public void setStatusMessage( String statusMessage ) {
+			public void setStatusUnfulfilled( String statusMessage ) {
 				this.mStatusMessage = statusMessage;
+				this.mStatus = ResponseStatus.UNFULFILLED;
 			}
 
-			public void setError( Throwable error ) {
-				this.mError = error;
+			public void setStatusFail( DBCmdException e ) {
+				this.mStatusMessage = e.getMessage();
+				this.mStatus = e.getStatus();
 			}
 
-			public void setStatus( RequestStatus status, String statusMessage ) {
-				setStatus( status );
-				setStatusMessage( statusMessage );
-			}
-
-			public void setError( Throwable error, RequestStatus status, String statusMessage ) {
-				setError( error );
-				setStatus( status );
-				setStatusMessage( statusMessage );
-			}
-
-			public void setError( Throwable error, RequestStatus status ) {
-				setError( error );
-				setStatus( status );
+			public void setStatusFail( Exception e ) {
+				this.mStatusMessage = e.getMessage();
+				this.mStatus = ResponseStatus.FAIL_UNKNOWN;
 			}
 
 			public final PropsWrite setArgs() {
@@ -247,30 +205,34 @@ public final class Commands {
 
 		T mValue;
 		Class<T> mType;
-		RequestStatus mStatus;
+		ResponseStatus mStatus = ResponseStatus.UNFULFILLED;
 		String mStatusMessage;
-		Throwable mError;
+		Exception mError;
 		Props mArgs;
 
 		private CmdResponse( Class<T> type ) {
-			this( type, null, RequestStatus.FAIL_UNKNOWN );
+			this( type, null, Void.class.equals( type ) ? ResponseStatus.SUCCESS : ResponseStatus.UNFULFILLED, null, null );
 		}
 
-		public CmdResponse( Class<T> type, T value, RequestStatus status ) {
-			this( type, value, status, null );
+		private CmdResponse( Class<T> type, T value ) {
+			this( type, value, ResponseStatus.SUCCESS, null, null );
 		}
 
-		public CmdResponse( Class<T> type, T value, RequestStatus status, Throwable error ) {
-			this( type, value, status, error, Props.EMPTY );
+		private CmdResponse( Class<T> type, Exception error ) {
+			this( type, null, ResponseStatus.FAIL_UNKNOWN, error, Props.EMPTY );
 		}
 
-		public CmdResponse( Class<T> type, T value, RequestStatus status, Throwable error, Props args ) {
+		private CmdResponse( Class<T> type, DBCmdException error ) {
+			this( type, null, error.getStatus(), error, Props.EMPTY );
+		}
+
+		private CmdResponse( Class<T> type, T value, ResponseStatus status, Exception error, Props args ) {
 			this.mType = type;
 			this.mValue = value;
 			this.mStatus = status;
 			this.mError = error;
 			this.mArgs = args;
-			this.mStatusMessage = StrUtl.EMPTY;
+			this.mStatusMessage = error != null ? error.getMessage() : status.name();
 			if ( this.mArgs == null ) {
 				this.mArgs = Props.EMPTY;
 			}
@@ -284,7 +246,7 @@ public final class Commands {
 			return mValue;
 		}
 
-		public final RequestStatus getStatus() {
+		public final ResponseStatus getStatus() {
 			return mStatus;
 		}
 
@@ -292,7 +254,7 @@ public final class Commands {
 			return mStatusMessage;
 		}
 
-		public final Throwable getError() {
+		public final Exception getError() {
 			return mError;
 		}
 

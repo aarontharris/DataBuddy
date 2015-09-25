@@ -6,9 +6,8 @@ import com.leap12.common.Log;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands;
 import com.leap12.databuddy.Commands.CmdResponse;
-import com.leap12.databuddy.Commands.RequestStatus;
+import com.leap12.databuddy.Commands.ResponseStatus;
 import com.leap12.databuddy.Commands.Role;
-import com.leap12.databuddy.connections.handler.HttpHandler;
 
 /**
  * The default launchpad connection. It serves as the Connection "Factory", routing a client to the appropriate connection based on how they connect.
@@ -40,11 +39,13 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 
 		// Apparently we didn't get an auth cmd, if its a HTTP request, lets try to deal with it just for fun
 		else {
-			HttpRequest request = new HttpRequest( msg );
-			if ( request.isValid() ) {
-				getClientConnection().setKeepAlive( false );
-				HttpHandler handler = new HttpHandler( this, request );
-				handler.handleRequest();
+			if ( HttpRequest.isPotentiallyHttpRequest( msg ) ) {
+				HttpRequest request = new HttpRequest( msg );
+				if ( request.isValid() ) {
+					getClientConnection().setKeepAlive( false );
+					// HttpCmd handler = new HttpCmd( this, request );
+					// handler.handleRequest();
+				}
 			}
 		}
 	}
@@ -63,7 +64,7 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 	 */
 	private UserDelegate handleAuthenticateUser( String msg ) throws Exception {
 		CmdResponse<Role> request = Commands.CMD_AUTH.executeCommand( this, msg );
-		if ( RequestStatus.SUCCESS == request.getStatus() ) {
+		if ( ResponseStatus.SUCCESS == request.getStatus() ) {
 
 			// TODO validate user -- maybe send them to the appropriate connection and let that connection do the validation? This would better
 			// support an anonymous type

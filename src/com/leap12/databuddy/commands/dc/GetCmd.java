@@ -1,14 +1,13 @@
-package com.leap12.databuddy.commands;
+package com.leap12.databuddy.commands.dc;
 
 import java.util.Map;
+
 import com.leap12.common.StrUtl;
 import com.leap12.databuddy.BaseConnectionDelegate;
-import com.leap12.databuddy.Commands;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
-import com.leap12.databuddy.Commands.DBuddyArgsException;
-import com.leap12.databuddy.Commands.RequestStatus;
 import com.leap12.databuddy.Commands.StrCommand;
+import com.leap12.databuddy.ex.DBCmdArgsException;
 
 public class GetCmd extends StrCommand<String> {
 	private final int beginIndex;
@@ -23,7 +22,6 @@ public class GetCmd extends StrCommand<String> {
 	@Override
 	public CmdResponse<String> executeCommand( BaseConnectionDelegate connection, String msg ) {
 		final CmdResponseMutable<String> response = new CmdResponseMutable<>( String.class );
-		response.setStatus( RequestStatus.UNFULFILLED );
 		try {
 			msg = msg.substring( beginIndex, msg.length() ); // from=zero-based-inclusive, to=zero-based-inclusive
 			Map<String, String> fields = StrUtl.toMap( msg, "=", "&" );
@@ -31,12 +29,12 @@ public class GetCmd extends StrCommand<String> {
 			String subtopic = fields.get( "subtopic" );
 			String key = fields.get( "key" );
 			if ( StrUtl.isEmptyAny( topic, subtopic, key ) ) {
-				throw new DBuddyArgsException( "invalid put command", null );
+				throw new DBCmdArgsException( "invalid get command" );
 			}
 			String data = connection.getDb().loadString( topic, subtopic, key );
-			response.setValue( data, RequestStatus.SUCCESS );
+			response.setStatusSuccess( data );
 		} catch ( Exception e ) {
-			response.setError( e, Commands.toRequestStatus( e ) );
+			response.setStatusFail( e );
 		}
 		return response;
 	}

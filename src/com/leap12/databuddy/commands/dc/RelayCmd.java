@@ -1,9 +1,9 @@
-package com.leap12.databuddy.commands;
+package com.leap12.databuddy.commands.dc;
 
 import com.leap12.common.ClientConnection;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands.CmdResponse;
-import com.leap12.databuddy.Commands.RequestStatus;
+import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
 import com.leap12.databuddy.Commands.StrCommand;
 import com.leap12.databuddy.DataBuddy;
 
@@ -22,7 +22,7 @@ public class RelayCmd extends StrCommand<Void> {
 		if ( clientConnection != null ) {
 			DataBuddy.get().relayMessage( msg, clientConnection );
 		}
-		return new CmdResponse<Void>( Void.class, null, RequestStatus.SUCCESS );
+		return new CmdResponseMutable<Void>( Void.class, (Void) null );
 	}
 
 }

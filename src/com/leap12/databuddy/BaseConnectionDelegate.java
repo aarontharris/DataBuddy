@@ -3,13 +3,14 @@ package com.leap12.databuddy;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import com.leap12.common.ClientConnection;
 import com.leap12.common.ConnectionDelegate;
 import com.leap12.common.Log;
 import com.leap12.common.Pair;
 import com.leap12.common.StrUtl;
 import com.leap12.databuddy.Commands.CmdResponse;
-import com.leap12.databuddy.Commands.RequestStatus;
+import com.leap12.databuddy.Commands.ResponseStatus;
 import com.leap12.databuddy.data.Dao;
 import com.leap12.databuddy.data.DataStore;
 
@@ -36,7 +37,7 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 	public final void writeResponse( CmdResponse<?> response ) {
 		try {
 			if ( response != null ) {
-				RequestStatus status = response.getStatus();
+				ResponseStatus status = response.getStatus();
 				if ( status == null ) {
 					throw new NullPointerException( "Status is null" );
 				}
@@ -71,13 +72,13 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 		}
 	}
 
-	public final void writeErrorResponse( String errMsg, Throwable err ) {
+	public final void writeErrorResponse( String errMsg, Exception err ) {
 		try {
 			String msg = errMsg;
 			if ( msg == null ) {
 				msg = err.getMessage();
 			}
-			writeResponseWithStatus( msg, Commands.toRequestStatus( err ).getCode(), String.class.getSimpleName() );
+			writeResponseWithStatus( msg, Commands.toResponseStatus( err ).getCode(), String.class.getSimpleName() );
 		} catch ( Exception e ) {
 			Log.e( e );
 		}

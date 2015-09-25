@@ -1,9 +1,8 @@
-package com.leap12.databuddy.commands;
+package com.leap12.databuddy.commands.dc;
 
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
-import com.leap12.databuddy.Commands.RequestStatus;
 import com.leap12.databuddy.Commands.StrCommand;
 
 public class HelpCmd extends StrCommand<String> {
@@ -20,8 +19,7 @@ public class HelpCmd extends StrCommand<String> {
 		// connection.writeLnMsgSafe(String.format("%s"));
 		// }
 		CmdResponse<String> out = new CmdResponseMutable<String>( String.class,
-				"Help me! Help me! ... Hahahaha! No one can hear you!",
-				RequestStatus.SUCCESS );
+				"Help me! Help me! ... Hahahaha! No one can hear you!" );
 		return out;
 	}
 }
