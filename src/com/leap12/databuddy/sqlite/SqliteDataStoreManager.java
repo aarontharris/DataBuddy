@@ -7,8 +7,10 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 import com.google.gson.JsonObject;
 import com.leap12.common.Log;
 import com.leap12.common.StrUtl;
@@ -61,11 +63,11 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		return String.format( format, table );
 	}
 
-	private static final String toQueryInsert( String table, String idKey, Type type, String strVal, int intVal, float floatVal ) {
+	private static final String toQueryInsert( String table, String idKey, Type type, String strVal, byte[] byteVal, int intVal, float floatVal ) {
 		String format = "INSERT OR REPLACE INTO %s "
-				+ "(idkey,valtype,textval,blobvalintval,floatval) VALUES "
-				+ "('%s', %s, '%s', %s, %s );";
-		return String.format( format, table, idKey, type.getTypeId(), strVal, intVal, floatVal );
+				+ "(idkey,valtype,textval,blobval,intval,floatval) VALUES "
+				+ "('%s', %s, '%s', '%s', %s, %s );";
+		return String.format( format, table, idKey, type.getTypeId(), strVal, byteVal, intVal, floatVal );
 	}
 
 	private static final String toQueryInsertBind( String table ) {
@@ -353,7 +355,7 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		// hours.
 		private void insertOrReplace( String table, String key, String value ) throws Exception {
 			ensureTable( table );
-			String query = SqliteDataStoreManager.toQueryInsert( table, key, Type.StringValue, value, 0, 0f );
+			String query = SqliteDataStoreManager.toQueryInsert( table, key, Type.StringValue, value, null, 0, 0f );
 			update( query );
 		}
 

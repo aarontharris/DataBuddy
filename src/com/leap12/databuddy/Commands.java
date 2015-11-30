@@ -176,6 +176,7 @@ public final class Commands {
 			}
 
 			public void setStatusSuccess( T value ) {
+				this.mValue = value;
 				this.mStatusMessage = "success";
 				this.mStatus = ResponseStatus.SUCCESS;
 			}

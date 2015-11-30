@@ -22,10 +22,11 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 
 	@Override
 	protected void onReceivedMsg( String msg ) throws Exception {
+		msg = msg.trim();
 		Log.debugNewlineChars( msg );
 
 		// If we are a proper auth command, then deal with it
-		if ( 1.0f == Commands.CMD_AUTH.isCommand( msg ) ) {
+		if ( 1.0f == Commands.CMD_AUTH.isCommand( msg ) ) { // 1.0f == 100% match
 			getClientConnection().setKeepAlive( true );
 			try {
 				UserDelegate connection = handleAuthenticateUser( msg );
@@ -63,6 +64,7 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 	 * @return Appropriate connection;
 	 */
 	private UserDelegate handleAuthenticateUser( String msg ) throws Exception {
+		Log.d( "handleAuthenticateUser: '%s'", msg );
 		CmdResponse<Role> request = Commands.CMD_AUTH.executeCommand( this, msg );
 		if ( ResponseStatus.SUCCESS == request.getStatus() ) {
 

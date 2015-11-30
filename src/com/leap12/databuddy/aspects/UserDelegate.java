@@ -33,6 +33,7 @@ public class UserDelegate extends BaseConnectionDelegate {
 
 	@Override
 	protected void onReceivedMsg( String msg ) throws Exception {
+		msg = msg.trim();
 		Log.debugNewlineChars( msg );
 
 		for ( StrCommand<?> cmd : commands ) {
