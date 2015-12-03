@@ -16,8 +16,6 @@ import com.leap12.databuddy.data.DataStore;
 
 public class BaseConnectionDelegate extends ConnectionDelegate {
 
-	private DataStore db;
-
 	@Override
 	protected void onAttached( ClientConnection connection ) throws Exception {
 		connection.setInactivityTimeout( 10000 );
@@ -27,11 +25,15 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 	/**
 	 * Only available while this delegate is attached to the ClientConnection
 	 */
-	public DataStore getDb() {
-		if ( db == null ) {
-			db = Dao.getInstance( this );
-		}
-		return db;
+	public DataStore getDbDefault() throws Exception {
+		return Dao.getInstance( this, null );
+	}
+
+	/**
+	 * Only available while this delegate is attached to the ClientConnection
+	 */
+	public DataStore getDb( String shardKey ) throws Exception {
+		return Dao.getInstance( this, shardKey );
 	}
 
 	public final void writeResponse( CmdResponse<?> response ) {
@@ -148,9 +150,7 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 	@Override
 	protected final void doDetatched() throws Exception {
 		super.doDetatched();
-		if ( db != null ) {
-			Dao.releaseInstance( this );
-		}
+		Dao.releaseInstance( this );
 	}
 
 	@Override

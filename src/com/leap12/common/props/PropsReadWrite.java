@@ -4,10 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.leap12.common.Log;
-import com.leap12.common.StrUtl;
+import org.json.JSONObject;
 
-public class PropsReadWrite extends Props {
+public class PropsReadWrite implements PropsRead, PropsWrite {
 	private final Map<String, String> properties = new HashMap<String, String>();
 
 	@Override
@@ -24,8 +23,19 @@ public class PropsReadWrite extends Props {
 	}
 
 	@Override
-	public String getString( String key ) {
-		return properties.get( key );
+	public void putAll( JSONObject json ) {
+		synchronized ( properties ) {
+			for ( String key : json.keySet() ) {
+				properties.put( key, String.valueOf( json.get( key ) ) );
+			}
+		}
+	}
+
+	@Override
+	public void putAll( Map<String, String> map ) {
+		synchronized ( properties ) {
+			properties.putAll( map );
+		}
 	}
 
 	@Override
@@ -34,157 +44,18 @@ public class PropsReadWrite extends Props {
 	}
 
 	@Override
-	public Boolean getBoolean( String key ) {
-		try {
-			String val = properties.get( key );
-			if ( StrUtl.isNotEmpty( val ) ) {
-				return Boolean.valueOf( val );
-			}
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
+	public String getString( String key, Converter<String> convert ) {
 		return null;
 	}
 
 	@Override
-	public boolean getBoolean( String key, boolean defVal ) {
-		try {
-			String val = properties.get( key );
-			if ( StrUtl.isNotEmpty( val ) ) {
-				return Boolean.parseBoolean( val );
-			}
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
-		return defVal;
+	public boolean containsKey( String key ) {
+		return properties.containsKey( key );
 	}
 
 	@Override
-	public void putBoolean( String key, Boolean val ) {
-		putString( key, String.valueOf( val ) );
+	public String getString( String key ) {
+		return properties.get( key );
 	}
 
-	@Override
-	public int getInt( String key, int defVal ) {
-		try {
-			String val = properties.get( key );
-			if ( StrUtl.isNotEmpty( val ) ) {
-				return Integer.parseInt( val );
-			}
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
-		return defVal;
-	}
-
-	@Override
-	public Integer getInteger( String key ) {
-		try {
-			String val = properties.get( key );
-			if ( StrUtl.isNotEmpty( val ) ) {
-				return Integer.valueOf( val );
-			}
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
-		return null;
-	}
-
-	@Override
-	public void putInteger( String key, Integer val ) {
-		putString( key, String.valueOf( val ) );
-	}
-
-	@Override
-	public long getLong( String key, long defVal ) {
-		try {
-			String val = properties.get( key );
-			if ( StrUtl.isNotEmpty( val ) ) {
-				return Long.parseLong( val );
-			}
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
-		return defVal;
-	}
-
-	@Override
-	public Long getLong( String key ) {
-		try {
-			String val = properties.get( key );
-			if ( StrUtl.isNotEmpty( val ) ) {
-				return Long.valueOf( val );
-			}
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
-		return null;
-	}
-
-	@Override
-	public void putLong( String key, Long val ) {
-		putString( key, String.valueOf( val ) );
-	}
-
-	@Override
-	public float getFloat( String key, float defVal ) {
-		try {
-			String val = properties.get( key );
-			if ( StrUtl.isNotEmpty( val ) ) {
-				return Float.parseFloat( val );
-			}
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
-		return defVal;
-	}
-
-	@Override
-	public Float getFloat( String key ) {
-		try {
-			String val = properties.get( key );
-			if ( StrUtl.isNotEmpty( val ) ) {
-				return Float.valueOf( val );
-			}
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
-		return null;
-	}
-
-	@Override
-	public void putFloat( String key, Float val ) {
-		putString( key, String.valueOf( val ) );
-	}
-
-	@Override
-	public double getDouble( String key, double defVal ) {
-		try {
-			String val = properties.get( key );
-			if ( StrUtl.isNotEmpty( val ) ) {
-				return Double.parseDouble( val );
-			}
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
-		return defVal;
-	}
-
-	@Override
-	public Double getDouble( String key ) {
-		try {
-			String val = properties.get( key );
-			if ( StrUtl.isNotEmpty( val ) ) {
-				return Double.valueOf( val );
-			}
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
-		return null;
-	}
-
-	@Override
-	public void putDouble( String key, Double val ) {
-		putString( key, String.valueOf( val ) );
-	}
 }

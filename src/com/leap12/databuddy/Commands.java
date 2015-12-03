@@ -13,6 +13,7 @@ import com.leap12.databuddy.commands.dc.GetCmd;
 import com.leap12.databuddy.commands.dc.HelpCmd;
 import com.leap12.databuddy.commands.dc.PutCmd;
 import com.leap12.databuddy.commands.dc.RelayCmd;
+import com.leap12.databuddy.commands.dc.TestCmd;
 import com.leap12.databuddy.ex.DBCmdException;
 
 public final class Commands {
@@ -209,7 +210,7 @@ public final class Commands {
 		ResponseStatus mStatus = ResponseStatus.UNFULFILLED;
 		String mStatusMessage;
 		Exception mError;
-		Props mArgs;
+		PropsReadWrite mArgs;
 
 		private CmdResponse( Class<T> type ) {
 			this( type, null, Void.class.equals( type ) ? ResponseStatus.SUCCESS : ResponseStatus.UNFULFILLED, null, null );
@@ -227,7 +228,7 @@ public final class Commands {
 			this( type, null, error.getStatus(), error, Props.EMPTY );
 		}
 
-		private CmdResponse( Class<T> type, T value, ResponseStatus status, Exception error, Props args ) {
+		private CmdResponse( Class<T> type, T value, ResponseStatus status, Exception error, PropsReadWrite args ) {
 			this.mType = type;
 			this.mValue = value;
 			this.mStatus = status;
@@ -265,6 +266,7 @@ public final class Commands {
 
 	}
 
+	public static final TestCmd CMD_TEST = new TestCmd();
 	public static final AuthCmd CMD_AUTH = new AuthCmd();
 	public static final HelpCmd CMD_HELP = new HelpCmd();
 	public static final PutCmd CMD_PUT = new PutCmd();

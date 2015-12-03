@@ -31,7 +31,7 @@ public class GetCmd extends StrCommand<String> {
 			if ( StrUtl.isEmptyAny( topic, subtopic, key ) ) {
 				throw new DBCmdArgsException( "invalid get command" );
 			}
-			String data = connection.getDb().loadString( topic, subtopic, key );
+			String data = connection.getDb( "default" ).loadString( topic, subtopic, key );
 			response.setStatusSuccess( data );
 		} catch ( Exception e ) {
 			response.setStatusFail( e );

@@ -6,7 +6,7 @@ public interface DataStoreManager {
 
 	public void shutdown() throws Exception;
 
-	public DataStore attainDataStore();
+	public DataStore attainDataStore( String shardKey ) throws Exception;
 
 	public void releaseDataStore( DataStore dataStore );
 }

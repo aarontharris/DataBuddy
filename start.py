@@ -17,7 +17,7 @@ def main():  # {
     if opts.buildSafe( sys.argv ):  # {
         port = opts.get( "port", DEFAULT_PORT )
         jarFile = EnvUtl.execute( "ls %s" % JAR_PATTERN )
-        os.system( "java -jar -D%s %s &" % ( port, jarFile ) )
+        os.system( "java -jar -DconfigFile=./databuddy.config -Dport=%s %s &" % ( port, jarFile ) )
     # }
 # }
 

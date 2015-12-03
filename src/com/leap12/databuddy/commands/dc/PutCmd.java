@@ -32,7 +32,7 @@ public class PutCmd extends StrCommand<Void> {
 			if ( StrUtl.isEmptyAny( topic, subtopic, key, data ) ) {
 				throw new DBCmdArgsException( "invalid put command" );
 			}
-			connection.getDb().saveString( topic, subtopic, key, data );
+			connection.getDb( "default" ).saveString( topic, subtopic, key, data );
 			response.setStatusSuccess( null );
 		} catch ( Exception e ) {
 			response.setStatusFail( e );

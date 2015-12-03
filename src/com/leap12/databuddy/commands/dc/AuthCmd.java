@@ -34,12 +34,14 @@ public class AuthCmd extends StrCommand<Role> {
 			Role role = Role.fromValue( roleStr );
 			String userStr = fields.get( "username" );
 			String passStr = fields.get( "password" );
+			String newStr = fields.get( "newuser" );
 			Log.d( "Received Request of Role %s for '%s' '%s'", roleStr, userStr, passStr );
 
 			Preconditions.isValidArg( StrUtl.isNotEmptyAll( roleStr, userStr, passStr ) ); // throws if empty
 
 			response.setArgs().putString( "username", userStr );
 			response.setArgs().putString( "password", passStr );
+			response.setArgs().putString( "newuser", newStr );
 			response.setStatusSuccess( role );
 		} catch ( NullPointerException | IllegalArgumentException e ) {
 			response.setStatusFail( new DBCmdArgsException( "Invalid Role" ) );

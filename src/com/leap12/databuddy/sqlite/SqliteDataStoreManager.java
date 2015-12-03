@@ -1,5 +1,8 @@
 package com.leap12.databuddy.sqlite;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -36,9 +39,15 @@ public class SqliteDataStoreManager implements DataStoreManager {
 	}
 
 	@Override
-	public DataStore attainDataStore() {
+	public DataStore attainDataStore( String shardKey ) throws Exception {
 		SqliteDataStore store = new SqliteDataStore();
-		store.openConnection( "dbBuddy.db" );
+		String pathToDbStr = String.format( "./db/%s/dbBuddy.db", shardKey );
+		Path pathToFile = Paths.get( pathToDbStr );
+		if ( !Files.exists( pathToFile ) ) {
+			Files.createDirectories( pathToFile.getParent() );
+			Files.createFile( pathToFile );
+		}
+		store.openConnection( pathToDbStr );
 		return store;
 	}
 

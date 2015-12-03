@@ -29,7 +29,7 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 		if ( 1.0f == Commands.CMD_AUTH.isCommand( msg ) ) { // 1.0f == 100% match
 			getClientConnection().setKeepAlive( true );
 			try {
-				UserDelegate connection = handleAuthenticateUser( msg );
+				UserDelegate connection = routeUser( msg );
 				getClientConnection().setDelegate( connection );
 			} catch ( Exception e ) {
 				Log.e( e );
@@ -63,15 +63,14 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 	 * @param msg
 	 * @return Appropriate connection;
 	 */
-	private UserDelegate handleAuthenticateUser( String msg ) throws Exception {
+	private UserDelegate routeUser( String msg ) throws Exception {
 		Log.d( "handleAuthenticateUser: '%s'", msg );
 		CmdResponse<Role> request = Commands.CMD_AUTH.executeCommand( this, msg );
 		if ( ResponseStatus.SUCCESS == request.getStatus() ) {
-
-			// TODO validate user -- maybe send them to the appropriate connection and let that connection do the validation? This would better
-			// support an anonymous type
-
-			return toConnection( request );
+			UserDelegate delegate = toConnection( request );
+			if ( delegate.authenticate( request ) ) {
+				return delegate;
+			}
 		}
 		throw new Exception( request.getError() );
 	}

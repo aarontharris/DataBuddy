@@ -6,7 +6,9 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
 import com.leap12.common.ClientConnection;
+import com.leap12.common.Crypto;
 import com.leap12.common.Log;
 import com.leap12.databuddy.aspects.HandshakeDelegate;
 
@@ -22,7 +24,13 @@ public final class DataBuddy {
 	private CountDownLatch latch = null;
 
 	private DataBuddy() {
-		Config.get().initialize( System.getProperties() );
+		try {
+			Config.get().initialize( System.getProperties() );
+
+			Crypto.season( Config.get().getCharPalette() );
+		} catch ( Exception e ) {
+			throw new IllegalStateException( e );
+		}
 	}
 
 	public synchronized void startup() throws Exception {
