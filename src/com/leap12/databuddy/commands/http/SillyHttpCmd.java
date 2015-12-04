@@ -9,11 +9,6 @@ import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
 public class SillyHttpCmd extends HttpCmd {
 
 	@Override
-	public float isCommand( HttpRequest in ) {
-		return 0.1f; // lowest priority but always valid.
-	}
-
-	@Override
 	public CmdResponse<HttpResponse> executeCommand( BaseConnectionDelegate connection, HttpRequest input ) {
 		try {
 			HttpResponse response = new HttpResponse();
@@ -30,6 +25,11 @@ public class SillyHttpCmd extends HttpCmd {
 		} catch ( Exception e ) {
 			return new CmdResponseMutable<HttpResponse>( HttpResponse.class, e );
 		}
+	}
+
+	@Override
+	protected float computeRelevance( HttpRequest request ) {
+		return 0.1f;
 	}
 
 }

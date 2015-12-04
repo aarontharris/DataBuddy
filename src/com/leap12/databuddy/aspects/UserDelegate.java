@@ -71,7 +71,8 @@ public class UserDelegate extends BaseConnectionDelegate {
 		} else {
 			// getDbDefault().loadString( "auth", "user", username );
 		}
-		return false;
+
+		return false; // FIXME: until we get authentication working, it should always fail
 	}
 
 	@Override
@@ -94,6 +95,11 @@ public class UserDelegate extends BaseConnectionDelegate {
 				}
 			}
 		}
+	}
+
+	@Override
+	protected void onDetatched() throws Exception {
+		Log.d( "detaching" );
 	}
 
 	@Override

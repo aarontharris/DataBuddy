@@ -14,6 +14,7 @@ import com.leap12.databuddy.commands.dc.HelpCmd;
 import com.leap12.databuddy.commands.dc.PutCmd;
 import com.leap12.databuddy.commands.dc.RelayCmd;
 import com.leap12.databuddy.commands.dc.TestCmd;
+import com.leap12.databuddy.commands.http.HttpContextualCmd;
 import com.leap12.databuddy.ex.DBCmdException;
 
 public final class Commands {
@@ -69,7 +70,7 @@ public final class Commands {
 		 * 
 		 * @param connection
 		 * @param msg
-		 * @return
+		 * @return Never Null
 		 */
 		public abstract CmdResponse<OUT> executeCommand( BaseConnectionDelegate connection, IN input );
 	}
@@ -112,21 +113,23 @@ public final class Commands {
 	public static enum ResponseStatus {
 		SUCCESS( 0, "Success" ), //
 		UNFULFILLED( 1, "Unfulfilled" ), //
-		FAIL_UNKNOWN( 2, "Internal Failure please log a bug." ), //
-		FAIL_INVALID_CMD_STATE( 3, "Invalid Command State" ), //
-		FAIL_INVALID_CMD_FORMAT( 4, "Invalid Command Format" ), //
-		FAIL_INVALID_CMD_ARGUMENTS( 5, "Invalid Command Arguments" ), //
-		FAIL_NOT_AUTHORIZED( 6, "Not Authorized" ), //
+
+		// < 0 is error
+		FAIL_UNKNOWN( -1, "Internal Failure please log a bug." ), //
+		FAIL_INVALID_CMD_STATE( -2, "Invalid Command State" ), //
+		FAIL_INVALID_CMD_FORMAT( -3, "Invalid Command Format" ), //
+		FAIL_INVALID_CMD_ARGUMENTS( -4, "Invalid Command Arguments" ), //
+		FAIL_NOT_AUTHORIZED( -5, "Not Authorized" ), //
 		;
 
 		private static final ResponseStatus[] idMap = new ResponseStatus[] {
-				SUCCESS, // 0
-				UNFULFILLED, // 1
-				FAIL_UNKNOWN, // 2
-				FAIL_INVALID_CMD_STATE, // 3
-				FAIL_INVALID_CMD_FORMAT, // 4
-				FAIL_INVALID_CMD_ARGUMENTS, // 5
-				FAIL_NOT_AUTHORIZED, // 6
+				SUCCESS,
+				UNFULFILLED,
+				FAIL_UNKNOWN,
+				FAIL_INVALID_CMD_STATE,
+				FAIL_INVALID_CMD_FORMAT,
+				FAIL_INVALID_CMD_ARGUMENTS,
+				FAIL_NOT_AUTHORIZED,
 		};
 
 		private final int mCode;
@@ -143,6 +146,18 @@ public final class Commands {
 
 		public String getMessage() {
 			return mMessage;
+		}
+
+		public boolean isSuccess() {
+			return SUCCESS.equals( this );
+		}
+
+		public boolean isUnFulfilled() {
+			return UNFULFILLED.equals( this );
+		}
+
+		public boolean isFailure() {
+			return this.mCode < 0;
 		}
 
 		public static ResponseStatus fromCode( int code ) {
@@ -272,6 +287,7 @@ public final class Commands {
 	public static final PutCmd CMD_PUT = new PutCmd();
 	public static final GetCmd CMD_GET = new GetCmd();
 	public static final RelayCmd CMD_RELAY = new RelayCmd();
+	public static final HttpContextualCmd CMD_HTTP_CONTEXTUAL = new HttpContextualCmd();
 
 	private static final Commands self = new Commands();
 

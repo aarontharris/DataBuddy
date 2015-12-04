@@ -13,9 +13,15 @@ import com.leap12.common.props.PropsReadWrite;
 
 public final class Config {
 
+	private static final String KEY_lineSeparator = "line.separator"; // no need for default, java comes with one
+	private static final String KEY_cryptCharPalette = "crypt.palette"; // has its own default
+
 	private static final String KEY_port = "port";
 	private static final int DEF_port = 25564;
-	private static final String KEY_lineSeparator = "line.separator"; // no need for default, java comes with one
+
+	private static final String KEY_cryptSalt = "crypt.salt";
+	private static final String DEF_cryptSalt = "undefined";
+
 
 	private static final Config self = new Config();
 
@@ -79,8 +85,12 @@ public final class Config {
 		return json;
 	}
 
-	public String getCharPalette() {
-		return props.getString( "crypt.palette" );
+	public String getEncryptionSalt() {
+		return props.getString( KEY_cryptSalt, DEF_cryptSalt );
+	}
+
+	public String getCharPalette( String defVal ) {
+		return props.getString( KEY_cryptCharPalette, defVal );
 	}
 
 	public int getPort() {

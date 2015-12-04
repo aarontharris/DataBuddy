@@ -26,8 +26,7 @@ public final class DataBuddy {
 	private DataBuddy() {
 		try {
 			Config.get().initialize( System.getProperties() );
-
-			Crypto.season( Config.get().getCharPalette() );
+			Crypto.season( Config.get().getCharPalette( null ) );
 		} catch ( Exception e ) {
 			throw new IllegalStateException( e );
 		}

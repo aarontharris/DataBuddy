@@ -1,13 +1,15 @@
 package com.leap12.common;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.leap12.common.props.PropsRead;
+import com.leap12.common.props.PropsReadWrite;
 
 // http://tools.ietf.org/html/rfc2616
 public class HttpRequest {
 	private Map<String, String> headers;
-	private Map<String, String> queryParams;
+	private PropsReadWrite queryParams;
 	private String body;
 	private String description = null;
 
@@ -23,11 +25,9 @@ public class HttpRequest {
 	}
 
 	public static boolean isPotentiallyHttpRequest( String requestStr ) {
-		if ( StrUtl.contains( requestStr, "HTTP/1.1\r\n" ) ) {
-			if ( requestStr.endsWith( "\r\n\r\n" ) ) {
-				return true;
-			}
-			Log.e( "Request contains HTTP/1.1 but does not end with rnrn" );
+		// likely candidate if "HTTP/1.1" is in the first line.
+		if ( StrUtl.isBefore( requestStr, "HTTP/1.1", "\r\n" ) ) {
+			return true;
 		}
 		return false;
 	}
@@ -40,20 +40,70 @@ public class HttpRequest {
 		return body;
 	}
 
+	/**
+	 * @param key - not case-sensitive
+	 */
+	public boolean containsHeader( String key ) {
+		return headers.containsKey( key.toLowerCase() );
+	}
+
+	/**
+	 * @param key - not case-sensitive
+	 * @return defVal if key did not exist, empty string if key had no value.
+	 */
+	public String getHeader( String key, String defVal ) {
+		String lkey = key.toLowerCase();
+		if ( headers.containsKey( lkey ) ) {
+			return headers.get( lkey );
+		}
+		return defVal;
+	}
+
+	/**
+	 * @param key - not case-sensitive
+	 * @return null if key did not exist, empty string if key had no value.
+	 */
 	public String getHeader( String key ) {
-		return headers.get( key.toLowerCase() );
+		return getHeader( key, null );
 	}
 
 	public String getUserAgent() {
 		return getHeader( "user-agent" );
 	}
 
+	public String getPath() {
+		return getHeader( "path" );
+	}
+
+	public String getHost() {
+		return getHeader( "host" );
+	}
+
+	public PropsRead getQueryParams() {
+		return queryParams;
+	}
+
 	/**
-	 * @param key
+	 * @param key - case-sensitive
+	 * @return defVal if key did not exist, empty string if key had no value.
+	 */
+	public String getQueryParam( String key, String defVal ) {
+		return queryParams.getString( key, defVal );
+	}
+
+	/**
+	 * @param key - case-insensitive
 	 * @return null if key did not exist, empty string if key had no value.
 	 */
 	public String getQueryParam( String key ) {
-		return queryParams.get( key );
+		return getQueryParam( key, null );
+	}
+
+	/**
+	 * @param key - case-insensitive
+	 */
+	public boolean containsQueryParam( String key ) {
+		return queryParams.containsKey( key );
 	}
 
 	public String describe() {
@@ -68,7 +118,7 @@ public class HttpRequest {
 				sb.append( String.format( "HEADER: '%s'='%s'", key, value ) ).append( newLine );
 			}
 			for ( String key : queryParams.keySet() ) {
-				String value = queryParams.get( key );
+				String value = queryParams.getString( key );
 				sb.append( String.format( "PARAMS: '%s'='%s'", key, value ) ).append( newLine );
 			}
 			if ( body != null ) {
@@ -81,7 +131,7 @@ public class HttpRequest {
 
 	private void parse( String requestStr ) throws Exception {
 		this.headers = new HashMap<>();
-		this.queryParams = Collections.emptyMap();
+		this.queryParams = new PropsReadWrite();
 
 		String[] httpParts = requestStr.split( "\r\n\r\n" );
 		String responseHeaders = httpParts[0];
@@ -106,7 +156,7 @@ public class HttpRequest {
 
 					if ( pathAndParamsParts.length > 1 ) {
 						String params = pathAndParamsParts[1];
-						queryParams = StrUtl.toMap( params, "=", "&" );
+						queryParams.putAll( StrUtl.toMap( params, "=", "&" ) );
 					}
 				}
 				headers.put( "path", path );

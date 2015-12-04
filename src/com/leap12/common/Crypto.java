@@ -46,9 +46,11 @@ public class Crypto {
 	 * </pre>
 	 */
 
-	public static final char[] DEFAULT_PALETTE = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+={}[]<>,.".toCharArray();
+	public static final String DEFAULT_PALETTE_STR = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+={}[]<>,.";
+	public static final char[] DEFAULT_PALETTE = DEFAULT_PALETTE_STR.toCharArray();
 	private static char[] CHAR_PALETTE = DEFAULT_PALETTE;
 
+	/** @param charPalette if Null or Empty, the default Palette is used */
 	public static void season( String charPalette ) {
 		if ( StrUtl.isNotEmpty( charPalette ) ) {
 			CHAR_PALETTE = charPalette.toCharArray();

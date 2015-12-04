@@ -3,6 +3,7 @@ package com.leap12.common.props;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.json.JSONObject;
 
@@ -44,11 +45,6 @@ public class PropsReadWrite implements PropsRead, PropsWrite {
 	}
 
 	@Override
-	public String getString( String key, Converter<String> convert ) {
-		return null;
-	}
-
-	@Override
 	public boolean containsKey( String key ) {
 		return properties.containsKey( key );
 	}
@@ -58,4 +54,13 @@ public class PropsReadWrite implements PropsRead, PropsWrite {
 		return properties.get( key );
 	}
 
+	@Override
+	public int size() {
+		return properties.size();
+	}
+
+	@Override
+	public Set<String> keySet() {
+		return properties.keySet();
+	}
 }

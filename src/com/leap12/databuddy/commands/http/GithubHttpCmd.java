@@ -11,16 +11,6 @@ import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
 public class GithubHttpCmd extends HttpCmd {
 
 	@Override
-	public float isCommand( HttpRequest in ) {
-		try {
-			Log.d( "USER-AGENT: '%s'", in.getUserAgent() );
-			return StrUtl.startsWith( in.getUserAgent(), "GitHub-Hookshot" ) ? 1f : 0;
-		} catch ( Exception e ) {
-			return 0f;
-		}
-	}
-
-	@Override
 	public CmdResponse<HttpResponse> executeCommand( BaseConnectionDelegate connection, HttpRequest input ) {
 		try {
 			HttpResponse response = new HttpResponse();
@@ -29,6 +19,12 @@ public class GithubHttpCmd extends HttpCmd {
 		} catch ( Exception e ) {
 			return new CmdResponseMutable<HttpResponse>( HttpResponse.class, e );
 		}
+	}
+
+	@Override
+	protected float computeRelevance( HttpRequest in ) throws Exception {
+		Log.d( "USER-AGENT: '%s'", in.getUserAgent() );
+		return StrUtl.startsWith( in.getUserAgent(), "GitHub-Hookshot" ) ? 1f : 0;
 	}
 
 

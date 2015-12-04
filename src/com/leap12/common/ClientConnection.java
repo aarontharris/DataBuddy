@@ -205,6 +205,7 @@ public class ClientConnection {
 
 						InputStream in = socket.getInputStream();
 						bIn = new BufferedInputStream( in );
+
 						byte[] inputBuffer = new byte[BUF_SIZE];
 						// boolean running = true;
 
@@ -236,6 +237,7 @@ public class ClientConnection {
 									// msg = StrUtl.toString(inputBuffer, 0, totalBytesRead);
 
 
+									// Bulk Up ?
 									// we've exceeded the expected common-case optimized limit, lets bulk up, should be a rare case
 									// if not a rare case, then you may want to increase BUF_SIZE, however this will cost you
 									// more overhead as the number of concurrent users increase, so its a trade off
@@ -248,11 +250,15 @@ public class ClientConnection {
 
 								if ( totalBytesRead > 0 ) {
 									String msg = StrUtl.toString( inputBuffer, 0, totalBytesRead );
+									processMessage( msg, inputBuffer, totalBytesRead );
+
+									// Trim Down ?
+									// We assume the previous bulk-up was an outlier case so we'll want to trim down to save memory.
+									// However if we're bulking up and triming down alot, that costs performance and you might consider upping the BUF_SIZE.
 									if ( inputBuffer.length > BUF_SIZE ) {
 										Log.d( "trim down from %s to %s", inputBuffer.length, BUF_SIZE );
 										inputBuffer = Arrays.copyOf( inputBuffer, BUF_SIZE );
 									}
-									processMessage( msg );
 								}
 							} finally {
 								running = running && keepAlive;
@@ -298,12 +304,12 @@ public class ClientConnection {
 		}
 	}
 
-	private void processMessage( String msg ) {
+	private void processMessage( String msgString, byte[] msgBytes, int length ) {
 		try {
-			if ( msg.startsWith( "quit" ) ) {
+			if ( msgString.startsWith( "quit" ) ) {
 				doReceivedQuit();
 			} else {
-				doReceivedMsg( msg );
+				doReceivedMsg( msgString, msgBytes, length );
 			}
 		} catch ( Exception e ) {
 			Log.e( e );
@@ -326,7 +332,7 @@ public class ClientConnection {
 		}
 	}
 
-	private void doReceivedMsg( final String msg ) throws Exception {
+	private void doReceivedMsg( final String msg, final byte[] msgBytes, final int length ) throws Exception {
 		delegate.doReceivedMsg( msg ); // fails here should bounce out to skip listeners
 		if ( listeners != null ) {
 			for ( WeakReference<ConnectionEventListener> weakListener : listeners ) {
