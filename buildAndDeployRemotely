@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+my $JAR_PATTERN = './target/DataBuddy*.jar';
+my $remoteFile = '/home/ubuntu/services/databuddy/dataBuddy.jar';
+my $remoteStart = '/home/ubuntu/services/databuddy/start';
+my $remoteStop = '/home/ubuntu/services/databuddy/stop';
+
+&main();
+sub main {
+  &build();
+  &deploy();
+}
+
+sub build {
+  system ("mvn clean install");
+}
+
+sub deploy {
+  my $jarFile = `ls $JAR_PATTERN`;
+  chomp($jarFile);
+  system ("scp_ec2_oregon1 $jarFile $remoteFile");
+  system ("ssh_ec2_oregon1 $remoteStop");
+  system ("ssh_ec2_oregon1 $remoteStart");
+}
+
