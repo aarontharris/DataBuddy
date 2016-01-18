@@ -16,7 +16,7 @@ public class ClientConnection {
 	public static long count = 0;
 	public static long millis = 0;
 	public static long longest = 0;
-	public static long shortest = 100;
+	public static long shortest = -1;
 
 	private final Socket socket;
 	private ConnectionDelegate delegate;
@@ -297,7 +297,7 @@ public class ClientConnection {
 				count += 1;
 				millis += delta;
 
-				if ( delta < shortest ) {
+				if ( delta < shortest || shortest == -1 ) {
 					shortest = delta;
 				}
 				if ( delta > longest ) {
