@@ -13,6 +13,7 @@ import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.ResponseStatus;
 import com.leap12.databuddy.data.Dao;
 import com.leap12.databuddy.data.DataStore;
+import com.leap12.databuddy.data.ShardKey;
 
 public class BaseConnectionDelegate extends ConnectionDelegate {
 
@@ -32,7 +33,7 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 	/**
 	 * Only available while this delegate is attached to the ClientConnection
 	 */
-	public DataStore getDb( String shardKey ) throws Exception {
+	public DataStore getDb( ShardKey shardKey ) throws Exception {
 		return Dao.getInstance( this, shardKey );
 	}
 

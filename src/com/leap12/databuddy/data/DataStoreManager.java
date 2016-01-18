@@ -8,5 +8,5 @@ public interface DataStoreManager {
 
 	public DataStore attainDataStore( String shardKey ) throws Exception;
 
-	public void releaseDataStore( DataStore dataStore );
+	// public void releaseDataStore( DataStore dataStore );
 }

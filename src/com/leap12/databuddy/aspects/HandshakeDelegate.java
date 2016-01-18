@@ -30,7 +30,7 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 	@Override
 	protected void onReceivedMsg( String msg ) throws Exception {
 		msg = msg.trim();
-		Log.debugNewlineChars( msg );
+		// Log.debugNewlineChars( msg );
 
 		// If we are a proper auth command, then deal with it
 		// hand control over to the UserDelegate for the remainder of the session
@@ -44,35 +44,38 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 				writeResponse( e.getMessage() );
 				getClientConnection().stop();
 			}
-		}
-
-		// If this is a proper http request
-		// hand control over to a Cmd handler, not a delegate.
-		// Why? Delegates are for dealing with a mult-request-session, where Cmd deal with a single request
-		// May be worth considering a restful-like session and building a delegate for that
-		else if ( HttpRequest.isPotentiallyHttpRequest( msg ) ) {
-			try {
-				HttpRequest request = new HttpRequest( msg );
-				if ( request.isValid() ) {
-					getClientConnection().setKeepAlive( false );
-					handleHttpRequest( request );
-				}
-			} catch ( Exception e ) {
-				HttpResponse errResp = new HttpResponse();
-				errResp.setStatusCode( HttpStatusCode.ERR_INTERNAL );
-				writeMsg( errResp.toString() );
-			}
+		} else if ( HttpRequest.isPotentiallyHttpRequest( msg ) ) {
+			onReceivedHttpMsg( msg );
 		} else {
 			Log.d( "\n\n## Unrecognized Request ##\n\n" );
 		}
 	}
 
-	private void handleHttpRequest( HttpRequest request ) throws Exception {
-		Log.d( request.describe() );
+	// If this is a proper http request
+	// hand control over to a Cmd handler, not a delegate.
+	// Why? Delegates are for dealing with a mult-request-session, where Cmd deal with a single request
+	// May be worth considering a restful-like session and building a delegate for that
+	protected void onReceivedHttpMsg( String msg ) throws Exception {
+		try {
+			HttpRequest request = new HttpRequest( msg );
+			if ( request.isValid() ) {
+				getClientConnection().setKeepAlive( false );
+				handleHttpRequest( request );
+			}
+		} catch ( Exception e ) {
+			HttpResponse errResp = new HttpResponse();
+			errResp.setStatusCode( HttpStatusCode.ERR_INTERNAL );
+			writeMsg( errResp.toString() );
+		}
+	}
+
+	protected void handleHttpRequest( HttpRequest request ) throws Exception {
+		// Log.d( request.describe() );
 
 		List<HttpCmd> commands = new ArrayList<>();
-		commands.add( Commands.CMD_HTTP_CONTEXTUAL );
-		// commands.add( new SillyHttpCmd() );
+		commands.add( Commands.CMD_HTTP_SAVE );
+		commands.add( Commands.CMD_HTTP_READ );
+		commands.add( Commands.CMD_HTTP_ECHO );
 
 		Iterable<HttpCmd> bestFirst = new HttpCmdFactory( commands ).bestFirst( request );
 		for ( HttpCmd httpCmd : bestFirst ) {

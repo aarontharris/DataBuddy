@@ -201,7 +201,8 @@ public class Crypto {
 			// Ideally, the user's password would be encoded on the client and transmitted to the server along with a username.
 			// Then on the server the received encoded password is converted to the lossyString
 			// and compared to the lossyString we stored for the requested username when they last set their password.
-			String simpleEncoded = crypt.toStringLossy( encMsg.getBytes() );
+			String simpleEncoded = toStringLossy( encMsg.getBytes(),
+					"1234567890!@#$AqBwCeDrEtFyGuHiIoJpKaLsMdNfOgPhQjRkSlTzUxVcWvXbYnZm1234567890!@#$AqBwCeDrEtFyGuHiIoJp".toCharArray() );
 			Log.d( "Enc: '%s'", simpleEncoded );
 
 		} catch ( BadPaddingException e ) {

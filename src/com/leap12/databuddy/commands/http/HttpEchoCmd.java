@@ -6,7 +6,7 @@ import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
 
-public class SillyHttpCmd extends HttpCmd {
+public class HttpEchoCmd extends HttpCmd {
 
 	@Override
 	public CmdResponse<HttpResponse> executeCommand( BaseConnectionDelegate connection, HttpRequest input ) {
@@ -14,9 +14,6 @@ public class SillyHttpCmd extends HttpCmd {
 			HttpResponse response = new HttpResponse();
 			response.getBodyBuilder().append( "<html>" );
 			response.getBodyBuilder().append( "<body>" );
-			response.getBodyBuilder().append( "<b>Yaay! I'm a webserver!</b>" );
-			response.getBodyBuilder().append( "</br>" );
-			response.getBodyBuilder().append( "</br>" );
 			response.getBodyBuilder().append( input.describe( "<br/>\n" ) );
 			response.getBodyBuilder().append( "</body>" );
 			response.getBodyBuilder().append( "</html>" );
@@ -29,7 +26,7 @@ public class SillyHttpCmd extends HttpCmd {
 
 	@Override
 	protected float computeRelevance( HttpRequest request ) {
-		return 0.1f;
+		return 0.01f;
 	}
 
 }

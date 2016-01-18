@@ -4,6 +4,10 @@ import org.json.JSONObject;
 
 public interface DataStore {
 
+	public void begin();
+
+	public void end();
+
 	public void saveString( String topic, String subtopic, String key, String value ) throws Exception;
 
 	public String loadString( String topic, String subtopic, String key ) throws Exception;
