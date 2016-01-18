@@ -1,9 +1,13 @@
 package com.leap12.databuddy.data;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
 import org.json.JSONObject;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.leap12.databuddy.BaseConnectionDelegate;
@@ -21,19 +25,39 @@ public final class Dao implements DataStore {
 	// The rest of the code shouldn't care about the DataStoreManager's true backing.
 	private static final DataStoreManager dbFactory = new SqliteDataStoreManager( "dbBuddy.db" ) {};
 
-	private static final Gson gson = new GsonBuilder().create();
-	private static final WeakHashMap<BaseConnectionDelegate, Dao> daos = new WeakHashMap<>();
+	public static final Gson gson = new GsonBuilder().create();
+	private static final String DEFAULT_SHARD_KEY = "default";
+	private static final WeakHashMap<BaseConnectionDelegate, Map<String, Dao>> daos = new WeakHashMap<>();
+	// private static final LRU<Dao> daos = new LRU<>( 10000 );
 	private static Lock lock = new ReentrantLock();
 
+	// FIXME: needs a LRU across all connections
+
 	/** Thread safe */
-	public static final Dao getInstance( BaseConnectionDelegate connection ) {
+	public static final Dao getInstance( BaseConnectionDelegate connection, ShardKey shardKey ) throws Exception {
 		lock.lock(); // this should be incredibly fast so lets not bother with the reentranceness
+		long start = System.currentTimeMillis();
 		try {
-			Dao dao = daos.get( connection );
-			if ( dao == null ) {
-				dao = new Dao( dbFactory.attainDataStore() );
-				daos.put( connection, dao );
+			String shardKeyStr = DEFAULT_SHARD_KEY;
+			if ( shardKey != null ) {
+				shardKeyStr = shardKey.toString();
 			}
+
+			Map<String, Dao> shards = daos.get( connection );
+			if ( shards == null ) {
+				shards = new HashMap<>();
+				daos.put( connection, shards );
+			}
+
+			Dao dao = shards.get( shardKeyStr );
+			if ( dao == null ) {
+				dao = new Dao( dbFactory.attainDataStore( shardKeyStr ) );
+				shards.put( shardKeyStr, dao );
+			}
+
+			long now = System.currentTimeMillis();
+			long delta = now - start;
+			// Log.d( "time: " + delta );
 			return dao;
 		} finally {
 			lock.unlock();
@@ -109,6 +133,16 @@ public final class Dao implements DataStore {
 	@Override
 	public JSONObject loadJSONObject( String topic, String subtopic, String key ) throws Exception {
 		return null;
+	}
+
+	@Override
+	public void begin() {
+		mDataStore.begin();
+	}
+
+	@Override
+	public void end() {
+		mDataStore.end();
 	}
 
 }

@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import com.leap12.common.props.PropsWrite;
 
 public class StrUtl {
@@ -85,6 +86,18 @@ public class StrUtl {
 		return false;
 	}
 
+	/** @return true if A starts with B, false if either is empty */
+	public static boolean startsWithAny( String a, String... b ) {
+		if ( isNotEmpty( a ) && b != null && b.length > 0 ) {
+			for ( String tmp : b ) {
+				if ( a.startsWith( tmp ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/** @return true if A ends with B, false if either is empty */
 	public static boolean endsWith( String a, String b ) {
 		if ( isNotEmpty( a ) && isNotEmpty( b ) ) {
@@ -97,6 +110,25 @@ public class StrUtl {
 	public static boolean contains( String a, String b ) {
 		if ( isNotEmpty( a ) && isNotEmpty( b ) ) {
 			a.contains( b );
+		}
+		return false;
+	}
+
+	/**
+	 * Is A before B within Str?<br>
+	 * Expects all non-nulls and both A and B must be present or false is returned.
+	 * 
+	 * @return true if the first instance of A is before the first instance of B
+	 */
+	public static boolean isBefore( String str, String a, String b ) {
+		if ( isNotEmptyAll( str ) && isNotEmpty( a ) && isNotEmpty( b ) ) {
+			int aPos = str.indexOf( a );
+			if ( aPos >= 0 ) {
+				int bPos = str.indexOf( b, aPos );
+				if ( bPos > aPos ) {
+					return true;
+				}
+			}
 		}
 		return false;
 	}

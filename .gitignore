@@ -3,3 +3,5 @@ dataBuddy.jar
 .DS_store
 dbBuddy.db
 target
+databuddy.json
+/db/

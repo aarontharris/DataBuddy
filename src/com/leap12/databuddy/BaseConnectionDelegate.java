@@ -3,19 +3,19 @@ package com.leap12.databuddy;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import com.leap12.common.ClientConnection;
 import com.leap12.common.ConnectionDelegate;
 import com.leap12.common.Log;
 import com.leap12.common.Pair;
 import com.leap12.common.StrUtl;
 import com.leap12.databuddy.Commands.CmdResponse;
-import com.leap12.databuddy.Commands.RequestStatus;
+import com.leap12.databuddy.Commands.ResponseStatus;
 import com.leap12.databuddy.data.Dao;
 import com.leap12.databuddy.data.DataStore;
+import com.leap12.databuddy.data.ShardKey;
 
 public class BaseConnectionDelegate extends ConnectionDelegate {
-
-	private DataStore db;
 
 	@Override
 	protected void onAttached( ClientConnection connection ) throws Exception {
@@ -26,17 +26,21 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 	/**
 	 * Only available while this delegate is attached to the ClientConnection
 	 */
-	public DataStore getDb() {
-		if ( db == null ) {
-			db = Dao.getInstance( this );
-		}
-		return db;
+	public DataStore getDbDefault() throws Exception {
+		return Dao.getInstance( this, null );
+	}
+
+	/**
+	 * Only available while this delegate is attached to the ClientConnection
+	 */
+	public DataStore getDb( ShardKey shardKey ) throws Exception {
+		return Dao.getInstance( this, shardKey );
 	}
 
 	public final void writeResponse( CmdResponse<?> response ) {
 		try {
 			if ( response != null ) {
-				RequestStatus status = response.getStatus();
+				ResponseStatus status = response.getStatus();
 				if ( status == null ) {
 					throw new NullPointerException( "Status is null" );
 				}
@@ -71,13 +75,13 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 		}
 	}
 
-	public final void writeErrorResponse( String errMsg, Throwable err ) {
+	public final void writeErrorResponse( String errMsg, Exception err ) {
 		try {
 			String msg = errMsg;
 			if ( msg == null ) {
 				msg = err.getMessage();
 			}
-			writeResponseWithStatus( msg, Commands.toRequestStatus( err ).getCode(), String.class.getSimpleName() );
+			writeResponseWithStatus( msg, Commands.toResponseStatus( err ).getCode(), String.class.getSimpleName() );
 		} catch ( Exception e ) {
 			Log.e( e );
 		}
@@ -147,9 +151,7 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 	@Override
 	protected final void doDetatched() throws Exception {
 		super.doDetatched();
-		if ( db != null ) {
-			Dao.releaseInstance( this );
-		}
+		Dao.releaseInstance( this );
 	}
 
 	@Override

@@ -1,6 +1,11 @@
 package com.leap12.databuddy.aspects;
 
+import java.util.UUID;
+
+import javax.crypto.BadPaddingException;
+
 import com.leap12.common.ClientConnection;
+import com.leap12.common.Crypto;
 import com.leap12.common.Log;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands;
@@ -25,6 +30,51 @@ public class UserDelegate extends BaseConnectionDelegate {
 		return Role.user;
 	}
 
+	protected boolean authenticate( CmdResponse<Role> request ) throws Exception {
+		String username = request.getArgs().getString( "username" );
+		String password = request.getArgs().getString( "password" );
+		String newUser = request.getArgs().getString( "newuser" );
+		Log.d( "%s : %s : %s", username, password, newUser );
+
+		if ( "1".equals( newUser ) ) {
+			long now = System.currentTimeMillis();
+			UUID uuid = UUID.randomUUID();
+			String id = uuid.toString() + "-" + now;
+			Log.d( "ID: '%s'", id );
+			// getDbDefault().loadString( "auth", "user", username );
+
+			// User user = new User( id, username, password );
+			// String strUser = Dao.gson.toJson( user );
+			// Log.d( "User: '%s'", strUser );
+
+			Crypto crypt = new Crypto();
+
+			try {
+				String SALT = "shouldBeSomethingRandom";
+				String user, pass, inMsg, keyPhrase;
+				// byte[] encMsg;
+
+				inMsg = "Hello World";
+				keyPhrase = username + password + SALT;
+
+				String encMsg = crypt.encrypt( inMsg, keyPhrase );
+				String outMsg = crypt.decrypt( encMsg, keyPhrase );
+
+				Log.d( "Enc: '%s'", crypt.toStringLossy( encMsg.getBytes() ) );
+
+				Log.d( "'%s', '%s', '%s', '%s', matched=%s", username, password, inMsg, outMsg, inMsg.equals( outMsg ) );
+			} catch ( BadPaddingException e ) {
+				Log.e( "Invalid Username or Password" );
+			}
+
+			// getDbDefault().saveString( "auth", "user", "id", strUser );
+		} else {
+			// getDbDefault().loadString( "auth", "user", username );
+		}
+
+		return false; // FIXME: until we get authentication working, it should always fail
+	}
+
 	@Override
 	protected void onAttached( ClientConnection connection ) throws Exception {
 		connection.setInactivityTimeout( 120000 ); // 2 minute -- TODO: client will need to detect disconnect and reconnect.
@@ -33,6 +83,7 @@ public class UserDelegate extends BaseConnectionDelegate {
 
 	@Override
 	protected void onReceivedMsg( String msg ) throws Exception {
+		msg = msg.trim();
 		Log.debugNewlineChars( msg );
 
 		for ( StrCommand<?> cmd : commands ) {
@@ -44,6 +95,11 @@ public class UserDelegate extends BaseConnectionDelegate {
 				}
 			}
 		}
+	}
+
+	@Override
+	protected void onDetatched() throws Exception {
+		Log.d( "detaching" );
 	}
 
 	@Override

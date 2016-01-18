@@ -1,14 +1,20 @@
 package com.leap12.databuddy.aspects;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.leap12.common.ClientConnection;
 import com.leap12.common.HttpRequest;
+import com.leap12.common.HttpResponse;
+import com.leap12.common.HttpResponse.HttpStatusCode;
 import com.leap12.common.Log;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands;
 import com.leap12.databuddy.Commands.CmdResponse;
-import com.leap12.databuddy.Commands.RequestStatus;
+import com.leap12.databuddy.Commands.ResponseStatus;
 import com.leap12.databuddy.Commands.Role;
-import com.leap12.databuddy.connections.handler.HttpHandler;
+import com.leap12.databuddy.commands.http.HttpCmd;
+import com.leap12.databuddy.commands.http.HttpCmdFactory;
 
 /**
  * The default launchpad connection. It serves as the Connection "Factory", routing a client to the appropriate connection based on how they connect.
@@ -23,29 +29,74 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 
 	@Override
 	protected void onReceivedMsg( String msg ) throws Exception {
-		Log.debugNewlineChars( msg );
+		msg = msg.trim();
+		// Log.debugNewlineChars( msg );
 
 		// If we are a proper auth command, then deal with it
-		if ( 1.0f == Commands.CMD_AUTH.isCommand( msg ) ) {
+		// hand control over to the UserDelegate for the remainder of the session
+		if ( 1.0f == Commands.CMD_AUTH.isCommand( msg ) ) { // 1.0f == 100% match
 			getClientConnection().setKeepAlive( true );
 			try {
-				UserDelegate connection = handleAuthenticateUser( msg );
+				UserDelegate connection = routeUser( msg );
 				getClientConnection().setDelegate( connection );
 			} catch ( Exception e ) {
 				Log.e( e );
 				writeResponse( e.getMessage() );
 				getClientConnection().stop();
 			}
+		} else if ( HttpRequest.isPotentiallyHttpRequest( msg ) ) {
+			onReceivedHttpMsg( msg );
+		} else {
+			Log.d( "\n\n## Unrecognized Request ##\n\n" );
 		}
+	}
 
-		// Apparently we didn't get an auth cmd, if its a HTTP request, lets try to deal with it just for fun
-		else {
+	// If this is a proper http request
+	// hand control over to a Cmd handler, not a delegate.
+	// Why? Delegates are for dealing with a mult-request-session, where Cmd deal with a single request
+	// May be worth considering a restful-like session and building a delegate for that
+	protected void onReceivedHttpMsg( String msg ) throws Exception {
+		try {
 			HttpRequest request = new HttpRequest( msg );
 			if ( request.isValid() ) {
 				getClientConnection().setKeepAlive( false );
-				HttpHandler handler = new HttpHandler( this, request );
-				handler.handleRequest();
+				handleHttpRequest( request );
 			}
+		} catch ( Exception e ) {
+			HttpResponse errResp = new HttpResponse();
+			errResp.setStatusCode( HttpStatusCode.ERR_INTERNAL );
+			writeMsg( errResp.toString() );
+		}
+	}
+
+	protected void handleHttpRequest( HttpRequest request ) throws Exception {
+		// Log.d( request.describe() );
+
+		List<HttpCmd> commands = new ArrayList<>();
+		commands.add( Commands.CMD_HTTP_SAVE );
+		commands.add( Commands.CMD_HTTP_READ );
+		commands.add( Commands.CMD_HTTP_ECHO );
+
+		Iterable<HttpCmd> bestFirst = new HttpCmdFactory( commands ).bestFirst( request );
+		for ( HttpCmd httpCmd : bestFirst ) {
+			CmdResponse<HttpResponse> cmdResp = httpCmd.executeCommand( this, request );
+
+			// bounce out if cmd failed
+			if ( cmdResp.getError() != null ) {
+				throw cmdResp.getError();
+			} else if ( cmdResp.getStatus().isFailure() ) {
+				throw new Exception( "Unrecognized Internal Error" );
+			}
+
+			// If unfulfilled, then it was obviously a cmd mismatch, let the next best handle it.
+			if ( cmdResp.getStatus().isUnFulfilled() ) {
+				continue;
+			}
+
+			// We've ruled out the bad, so the response must be usable, use it
+			HttpResponse resp = cmdResp.getValue();
+			writeMsg( resp.toString() );
+			break;
 		}
 	}
 
@@ -61,14 +112,14 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 	 * @param msg
 	 * @return Appropriate connection;
 	 */
-	private UserDelegate handleAuthenticateUser( String msg ) throws Exception {
+	private UserDelegate routeUser( String msg ) throws Exception {
+		Log.d( "handleAuthenticateUser: '%s'", msg );
 		CmdResponse<Role> request = Commands.CMD_AUTH.executeCommand( this, msg );
-		if ( RequestStatus.SUCCESS == request.getStatus() ) {
-
-			// TODO validate user -- maybe send them to the appropriate connection and let that connection do the validation? This would better
-			// support an anonymous type
-
-			return toConnection( request );
+		if ( ResponseStatus.SUCCESS == request.getStatus() ) {
+			UserDelegate delegate = toConnection( request );
+			if ( delegate.authenticate( request ) ) {
+				return delegate;
+			}
 		}
 		throw new Exception( request.getError() );
 	}

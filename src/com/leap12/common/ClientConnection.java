@@ -13,6 +13,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class ClientConnection {
 	private static ConnectionDelegate DEFAULT_DELEGATE = new ConnectionDelegate();
 
+	public static long count = 0;
+	public static long millis = 0;
+	public static long longest = 0;
+	public static long shortest = 100;
+
 	private final Socket socket;
 	private ConnectionDelegate delegate;
 	private CopyOnWriteArrayList<WeakReference<ConnectionEventListener>> listeners;
@@ -22,6 +27,7 @@ public class ClientConnection {
 	private int mInactivityTimeoutMillis = 0;
 	private int mInactivityPollIntervalMillis = 500;
 	private BufferedInputStream bIn;
+	private long startTime = 0L;
 
 	public ClientConnection( Socket socket ) {
 		this.socket = socket;
@@ -192,6 +198,7 @@ public class ClientConnection {
 	private static final int BUF_SIZE = 1024;
 
 	public final void run() {
+		startTime = System.currentTimeMillis();
 		new Thread( new Runnable() {
 			@Override
 			public void run() {
@@ -205,6 +212,7 @@ public class ClientConnection {
 
 						InputStream in = socket.getInputStream();
 						bIn = new BufferedInputStream( in );
+
 						byte[] inputBuffer = new byte[BUF_SIZE];
 						// boolean running = true;
 
@@ -214,7 +222,6 @@ public class ClientConnection {
 						// gameClient should keepAlive=true
 						while ( isSocketOpen() ) { // keepAlive messaging loop
 							try {
-								Log.d( "main loop" );
 								int totalBytesRead = 0;
 
 								handleInactivity( bIn );
@@ -222,7 +229,6 @@ public class ClientConnection {
 								boolean more = true;
 								int bytesRead = 0;
 								while ( more ) { // individual message loop
-									Log.d( " - read loop" );
 									bytesRead = bIn.read( inputBuffer, totalBytesRead, BUF_SIZE );
 									if ( bytesRead == -1 ) {
 										running = false;
@@ -236,6 +242,7 @@ public class ClientConnection {
 									// msg = StrUtl.toString(inputBuffer, 0, totalBytesRead);
 
 
+									// Bulk Up ?
 									// we've exceeded the expected common-case optimized limit, lets bulk up, should be a rare case
 									// if not a rare case, then you may want to increase BUF_SIZE, however this will cost you
 									// more overhead as the number of concurrent users increase, so its a trade off
@@ -248,11 +255,15 @@ public class ClientConnection {
 
 								if ( totalBytesRead > 0 ) {
 									String msg = StrUtl.toString( inputBuffer, 0, totalBytesRead );
+									processMessage( msg, inputBuffer, totalBytesRead );
+
+									// Trim Down ?
+									// We assume the previous bulk-up was an outlier case so we'll want to trim down to save memory.
+									// However if we're bulking up and triming down alot, that costs performance and you might consider upping the BUF_SIZE.
 									if ( inputBuffer.length > BUF_SIZE ) {
 										Log.d( "trim down from %s to %s", inputBuffer.length, BUF_SIZE );
 										inputBuffer = Arrays.copyOf( inputBuffer, BUF_SIZE );
 									}
-									processMessage( msg );
 								}
 							} finally {
 								running = running && keepAlive;
@@ -278,7 +289,24 @@ public class ClientConnection {
 					}
 					stop();
 				}
-				Log.d( "Thread died naturally" );
+				// Log.d( "Thread died naturally" );
+
+				long stop = System.currentTimeMillis();
+				long delta = stop - startTime;
+
+				count += 1;
+				millis += delta;
+
+				if ( delta < shortest ) {
+					shortest = delta;
+				}
+				if ( delta > longest ) {
+					longest = delta;
+				}
+
+				float avg = (float) millis / (float) count;
+
+				Log.d( "This: %s, Avg: %s, Shortest: %s, Longest: %s", delta, avg, shortest, longest );
 			}
 		} ).start();
 	}
@@ -298,12 +326,12 @@ public class ClientConnection {
 		}
 	}
 
-	private void processMessage( String msg ) {
+	private void processMessage( String msgString, byte[] msgBytes, int length ) {
 		try {
-			if ( msg.startsWith( "quit" ) ) {
+			if ( msgString.startsWith( "quit" ) ) {
 				doReceivedQuit();
 			} else {
-				doReceivedMsg( msg );
+				doReceivedMsg( msgString, msgBytes, length );
 			}
 		} catch ( Exception e ) {
 			Log.e( e );
@@ -326,7 +354,7 @@ public class ClientConnection {
 		}
 	}
 
-	private void doReceivedMsg( final String msg ) throws Exception {
+	private void doReceivedMsg( final String msg, final byte[] msgBytes, final int length ) throws Exception {
 		delegate.doReceivedMsg( msg ); // fails here should bounce out to skip listeners
 		if ( listeners != null ) {
 			for ( WeakReference<ConnectionEventListener> weakListener : listeners ) {
@@ -376,7 +404,7 @@ public class ClientConnection {
 
 	private boolean isConnected() {
 		if ( socket != null && socket.isBound() && socket.isConnected() && !socket.isClosed() && !socket.isOutputShutdown()
-				&& !socket.isInputShutdown() ) {
+		        && !socket.isInputShutdown() ) {
 			return true;
 		}
 		return false;
