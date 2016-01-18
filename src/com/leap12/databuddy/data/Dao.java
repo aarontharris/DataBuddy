@@ -10,7 +10,6 @@ import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.leap12.common.Log;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.sqlite.SqliteDataStoreManager;
 
@@ -29,15 +28,19 @@ public final class Dao implements DataStore {
 	public static final Gson gson = new GsonBuilder().create();
 	private static final String DEFAULT_SHARD_KEY = "default";
 	private static final WeakHashMap<BaseConnectionDelegate, Map<String, Dao>> daos = new WeakHashMap<>();
+	// private static final LRU<Dao> daos = new LRU<>( 10000 );
 	private static Lock lock = new ReentrantLock();
 
+	// FIXME: needs a LRU across all connections
+
 	/** Thread safe */
-	public static final Dao getInstance( BaseConnectionDelegate connection, String shardKey ) throws Exception {
+	public static final Dao getInstance( BaseConnectionDelegate connection, ShardKey shardKey ) throws Exception {
 		lock.lock(); // this should be incredibly fast so lets not bother with the reentranceness
 		long start = System.currentTimeMillis();
 		try {
-			if ( shardKey == null ) {
-				shardKey = DEFAULT_SHARD_KEY;
+			String shardKeyStr = DEFAULT_SHARD_KEY;
+			if ( shardKey != null ) {
+				shardKeyStr = shardKey.toString();
 			}
 
 			Map<String, Dao> shards = daos.get( connection );
@@ -46,15 +49,15 @@ public final class Dao implements DataStore {
 				daos.put( connection, shards );
 			}
 
-			Dao dao = shards.get( shardKey );
+			Dao dao = shards.get( shardKeyStr );
 			if ( dao == null ) {
-				dao = new Dao( dbFactory.attainDataStore( shardKey ) );
-				shards.put( shardKey, dao );
+				dao = new Dao( dbFactory.attainDataStore( shardKeyStr ) );
+				shards.put( shardKeyStr, dao );
 			}
 
 			long now = System.currentTimeMillis();
 			long delta = now - start;
-			Log.d( "time: " + delta );
+			// Log.d( "time: " + delta );
 			return dao;
 		} finally {
 			lock.unlock();
@@ -130,6 +133,16 @@ public final class Dao implements DataStore {
 	@Override
 	public JSONObject loadJSONObject( String topic, String subtopic, String key ) throws Exception {
 		return null;
+	}
+
+	@Override
+	public void begin() {
+		mDataStore.begin();
+	}
+
+	@Override
+	public void end() {
+		mDataStore.end();
 	}
 
 }

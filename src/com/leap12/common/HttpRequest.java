@@ -3,17 +3,33 @@ package com.leap12.common;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.leap12.common.props.Props;
 import com.leap12.common.props.PropsRead;
 import com.leap12.common.props.PropsReadWrite;
 
 // http://tools.ietf.org/html/rfc2616
 public class HttpRequest {
+	public static final String CONTENT_TYPE_APP_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
+
+	public static HttpRequest newTestHttpRequest() {
+		HttpRequest out = new HttpRequest();
+		out.valid = true;
+		out.headers = new HashMap<>();
+		out.queryParams = new PropsReadWrite();
+		out.bodyParams = Props.EMPTY;
+		return out;
+	}
+
 	private Map<String, String> headers;
+	private PropsReadWrite bodyParams;
 	private PropsReadWrite queryParams;
 	private String body;
 	private String description = null;
 
 	private boolean valid = false;
+
+	private HttpRequest() {
+	}
 
 	public HttpRequest( String requestStr ) {
 		try {
@@ -49,6 +65,18 @@ public class HttpRequest {
 
 	/**
 	 * @param key - not case-sensitive
+	 */
+	public boolean containsHeaders( String... keys ) {
+		for ( String key : keys ) {
+			if ( !containsHeader( key ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * @param key - not case-sensitive
 	 * @return defVal if key did not exist, empty string if key had no value.
 	 */
 	public String getHeader( String key, String defVal ) {
@@ -79,6 +107,26 @@ public class HttpRequest {
 		return getHeader( "host" );
 	}
 
+	public String getMethod() {
+		return getHeader( "method" );
+	}
+
+	public boolean isGet() {
+		return getHeader( "method", "" ).equalsIgnoreCase( "GET" );
+	}
+
+	public boolean isPost() {
+		return getHeader( "method", "" ).equalsIgnoreCase( "POST" );
+	}
+
+	public String getContentType() {
+		return getHeader( "content-type" );
+	}
+
+	public boolean isContentTypeXwwwFormUrlEncoded() {
+		return CONTENT_TYPE_APP_X_WWW_FORM_URLENCODED.equalsIgnoreCase( getContentType() );
+	}
+
 	public PropsRead getQueryParams() {
 		return queryParams;
 	}
@@ -104,6 +152,57 @@ public class HttpRequest {
 	 */
 	public boolean containsQueryParam( String key ) {
 		return queryParams.containsKey( key );
+	}
+
+	/**
+	 * @param key - case-insensitive
+	 */
+	public boolean containsQueryParams( String... keys ) {
+		for ( String key : keys ) {
+			if ( !containsQueryParam( key ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public PropsRead getBodyParams() {
+		return bodyParams;
+	}
+
+	/**
+	 * @param key - case-sensitive
+	 * @return defVal if key did not exist, empty string if key had no value.
+	 */
+	public String getBodyParam( String key, String defVal ) {
+		return bodyParams.getString( key, defVal );
+	}
+
+	/**
+	 * @param key - case-insensitive
+	 * @return null if key did not exist, empty string if key had no value.
+	 */
+	public String getBodyParam( String key ) {
+		return getBodyParam( key, null );
+	}
+
+	/**
+	 * @param key - case-insensitive
+	 */
+	public boolean containsBodyParam( String key ) {
+		return bodyParams.containsKey( key );
+	}
+
+	/**
+	 * @param key - case-insensitive
+	 */
+	public boolean containsBodyParams( String... keys ) {
+		for ( String key : keys ) {
+			if ( !containsBodyParam( key ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public String describe() {
@@ -177,7 +276,11 @@ public class HttpRequest {
 
 		if ( httpParts.length > 1 ) {
 			body = httpParts[1];
+
+			if ( isContentTypeXwwwFormUrlEncoded() ) {
+				bodyParams = new PropsReadWrite();
+				bodyParams.putAll( StrUtl.toMap( body, "=", "&" ) );
+			}
 		}
 	}
-
 }

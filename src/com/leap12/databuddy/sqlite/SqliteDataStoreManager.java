@@ -1,5 +1,6 @@
 package com.leap12.databuddy.sqlite;
 
+import java.lang.ref.WeakReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -8,8 +9,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -38,51 +43,71 @@ public class SqliteDataStoreManager implements DataStoreManager {
 	public void shutdown() throws Exception {
 	}
 
+	//
+	//
+	//
+	// FIXME: need a way to have multiple connections get the same instance of the DataStore if the ShardKey is the same.
+	// that way the lock on the datastore will prevent concurrent read writes.
+	//
+	//
+	//
+
+	private final Map<String, WeakReference<SqliteDataStore>> stores = new HashMap<>();
+
 	@Override
 	public DataStore attainDataStore( String shardKey ) throws Exception {
-		SqliteDataStore store = new SqliteDataStore();
-		String pathToDbStr = String.format( "./db/%s/dbBuddy.db", shardKey );
-		Path pathToFile = Paths.get( pathToDbStr );
-		if ( !Files.exists( pathToFile ) ) {
-			Files.createDirectories( pathToFile.getParent() );
-			Files.createFile( pathToFile );
+		SqliteDataStore store = null;
+		WeakReference<SqliteDataStore> storeRef = stores.get( shardKey );
+		if ( storeRef != null ) {
+			store = storeRef.get();
 		}
-		store.openConnection( pathToDbStr );
+
+		if ( store == null ) {
+			store = new SqliteDataStore();
+			String pathToDbStr = String.format( "./db/%s/%s", shardKey, mDbName );
+			Path pathToFile = Paths.get( pathToDbStr );
+			if ( !Files.exists( pathToFile ) ) {
+				Files.createDirectories( pathToFile.getParent() );
+				Files.createFile( pathToFile );
+			}
+			store.openConnection( pathToDbStr );
+			stores.put( shardKey, new WeakReference<>( store ) );
+		}
 		return store;
 	}
 
-	@Override
-	public void releaseDataStore( DataStore store ) {
-		if ( store instanceof SqliteDataStore ) {
-			( (SqliteDataStore) store ).closeConnection();
-		}
-	}
+	// @Override
+	// public void releaseDataStore( DataStore store ) {
+	// if ( store instanceof SqliteDataStore ) {
+	// ( (SqliteDataStore) store ).closeConnection();
+	// }
+	// }
 
 	private static final String toQuerySchema( String table ) {
 		String format = ""
-				+ "CREATE TABLE %s "
-				+ "("
-				+ "  idkey          TEXT PRIMARY KEY NOT NULL, "
-				+ "  valtype        INT NOT NULL, "
-				+ "  textval        TEXT, "
-				+ "  blobval        BLOB, "
-				+ "  intval         INT, "
-				+ "  floatval       REAL "
-				+ ")";
+		        + "CREATE TABLE %s "
+		        + "("
+		        + "  idkey          TEXT PRIMARY KEY NOT NULL, "
+		        + "  valtype        INT NOT NULL, "
+		        + "  textval        TEXT, "
+		        + "  blobval        BLOB, "
+		        + "  intval         INT, "
+		        + "  floatval       REAL "
+		        + ")";
 		return String.format( format, table );
 	}
 
 	private static final String toQueryInsert( String table, String idKey, Type type, String strVal, byte[] byteVal, int intVal, float floatVal ) {
 		String format = "INSERT OR REPLACE INTO %s "
-				+ "(idkey,valtype,textval,blobval,intval,floatval) VALUES "
-				+ "('%s', %s, '%s', '%s', %s, %s );";
+		        + "(idkey,valtype,textval,blobval,intval,floatval) VALUES "
+		        + "('%s', %s, '%s', '%s', %s, %s );";
 		return String.format( format, table, idKey, type.getTypeId(), strVal, byteVal, intVal, floatVal );
 	}
 
 	private static final String toQueryInsertBind( String table ) {
 		String format = "INSERT OR REPLACE INTO " + table + " "
-				+ "(idkey,valtype,textval,blobval,intval,floatval) VALUES "
-				+ "(?,?,?,?,?,?);";
+		        + "(idkey,valtype,textval,blobval,intval,floatval) VALUES "
+		        + "(?,?,?,?,?,?);";
 		return format;
 	}
 
@@ -109,13 +134,13 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		JsonValue( 6, "textval", JsonObject.class );
 
 		private static final Type[] idMap = new Type[] {
-				// ZERO is invalid
-				BooleanValue, // 1
-				IntegerValue, // 2
-				FloatValue, // 3
-				StringValue, // 4
-				BlobValue, // 5
-				JsonValue, // 6
+		        // ZERO is invalid
+		        BooleanValue, // 1
+		        IntegerValue, // 2
+		        FloatValue, // 3
+		        StringValue, // 4
+		        BlobValue, // 5
+		        JsonValue, // 6
 		};
 
 		private int typeId;
@@ -162,9 +187,20 @@ public class SqliteDataStoreManager implements DataStoreManager {
 	public static class SqliteDataStore implements DataStore {
 		private Connection connection;
 		private final Set<String> knownTables; // TODO: maybe make this a shared resource for all connections? Beware major concurrency ClusterF
+		private final Lock lock = new ReentrantLock();
 
 		public SqliteDataStore() {
 			knownTables = new HashSet<>();
+		}
+
+		@Override
+		public void begin() {
+			lock.lock();
+		}
+
+		@Override
+		public void end() {
+			lock.unlock();
 		}
 
 		@Override
@@ -369,8 +405,8 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		}
 
 		private void insertOrReplace( String table, Type type, String key,
-				String textVal, byte[] byteVal, int intVal, float floatVal )
-				throws Exception {
+		        String textVal, byte[] byteVal, int intVal, float floatVal )
+		        throws Exception {
 			ensureTable( table );
 			String query = SqliteDataStoreManager.toQueryInsertBind( table );
 			PreparedStatement stmt = connection.prepareStatement( query );

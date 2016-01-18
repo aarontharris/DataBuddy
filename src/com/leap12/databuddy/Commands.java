@@ -14,7 +14,9 @@ import com.leap12.databuddy.commands.dc.HelpCmd;
 import com.leap12.databuddy.commands.dc.PutCmd;
 import com.leap12.databuddy.commands.dc.RelayCmd;
 import com.leap12.databuddy.commands.dc.TestCmd;
-import com.leap12.databuddy.commands.http.HttpContextualCmd;
+import com.leap12.databuddy.commands.http.HttpEchoCmd;
+import com.leap12.databuddy.commands.http.HttpReadCmd;
+import com.leap12.databuddy.commands.http.HttpSaveCmd;
 import com.leap12.databuddy.ex.DBCmdException;
 
 public final class Commands {
@@ -123,13 +125,13 @@ public final class Commands {
 		;
 
 		private static final ResponseStatus[] idMap = new ResponseStatus[] {
-				SUCCESS,
-				UNFULFILLED,
-				FAIL_UNKNOWN,
-				FAIL_INVALID_CMD_STATE,
-				FAIL_INVALID_CMD_FORMAT,
-				FAIL_INVALID_CMD_ARGUMENTS,
-				FAIL_NOT_AUTHORIZED,
+		        SUCCESS,
+		        UNFULFILLED,
+		        FAIL_UNKNOWN,
+		        FAIL_INVALID_CMD_STATE,
+		        FAIL_INVALID_CMD_FORMAT,
+		        FAIL_INVALID_CMD_ARGUMENTS,
+		        FAIL_NOT_AUTHORIZED,
 		};
 
 		private final int mCode;
@@ -287,7 +289,9 @@ public final class Commands {
 	public static final PutCmd CMD_PUT = new PutCmd();
 	public static final GetCmd CMD_GET = new GetCmd();
 	public static final RelayCmd CMD_RELAY = new RelayCmd();
-	public static final HttpContextualCmd CMD_HTTP_CONTEXTUAL = new HttpContextualCmd();
+	public static final HttpEchoCmd CMD_HTTP_ECHO = new HttpEchoCmd();
+	public static final HttpSaveCmd CMD_HTTP_SAVE = new HttpSaveCmd();
+	public static final HttpReadCmd CMD_HTTP_READ = new HttpReadCmd();
 
 	private static final Commands self = new Commands();
 

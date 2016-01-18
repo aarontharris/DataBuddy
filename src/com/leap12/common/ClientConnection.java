@@ -13,6 +13,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class ClientConnection {
 	private static ConnectionDelegate DEFAULT_DELEGATE = new ConnectionDelegate();
 
+	public static long count = 0;
+	public static long millis = 0;
+	public static long longest = 0;
+	public static long shortest = 100;
+
 	private final Socket socket;
 	private ConnectionDelegate delegate;
 	private CopyOnWriteArrayList<WeakReference<ConnectionEventListener>> listeners;
@@ -22,6 +27,7 @@ public class ClientConnection {
 	private int mInactivityTimeoutMillis = 0;
 	private int mInactivityPollIntervalMillis = 500;
 	private BufferedInputStream bIn;
+	private long startTime = 0L;
 
 	public ClientConnection( Socket socket ) {
 		this.socket = socket;
@@ -192,6 +198,7 @@ public class ClientConnection {
 	private static final int BUF_SIZE = 1024;
 
 	public final void run() {
+		startTime = System.currentTimeMillis();
 		new Thread( new Runnable() {
 			@Override
 			public void run() {
@@ -215,7 +222,6 @@ public class ClientConnection {
 						// gameClient should keepAlive=true
 						while ( isSocketOpen() ) { // keepAlive messaging loop
 							try {
-								Log.d( "main loop" );
 								int totalBytesRead = 0;
 
 								handleInactivity( bIn );
@@ -223,7 +229,6 @@ public class ClientConnection {
 								boolean more = true;
 								int bytesRead = 0;
 								while ( more ) { // individual message loop
-									Log.d( " - read loop" );
 									bytesRead = bIn.read( inputBuffer, totalBytesRead, BUF_SIZE );
 									if ( bytesRead == -1 ) {
 										running = false;
@@ -284,7 +289,24 @@ public class ClientConnection {
 					}
 					stop();
 				}
-				Log.d( "Thread died naturally" );
+				// Log.d( "Thread died naturally" );
+
+				long stop = System.currentTimeMillis();
+				long delta = stop - startTime;
+
+				count += 1;
+				millis += delta;
+
+				if ( delta < shortest ) {
+					shortest = delta;
+				}
+				if ( delta > longest ) {
+					longest = delta;
+				}
+
+				float avg = (float) millis / (float) count;
+
+				Log.d( "This: %s, Avg: %s, Shortest: %s, Longest: %s", delta, avg, shortest, longest );
 			}
 		} ).start();
 	}
@@ -382,7 +404,7 @@ public class ClientConnection {
 
 	private boolean isConnected() {
 		if ( socket != null && socket.isBound() && socket.isConnected() && !socket.isClosed() && !socket.isOutputShutdown()
-				&& !socket.isInputShutdown() ) {
+		        && !socket.isInputShutdown() ) {
 			return true;
 		}
 		return false;
