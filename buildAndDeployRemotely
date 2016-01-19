@@ -20,6 +20,7 @@ sub deploy {
   chomp($jarFile);
   system ("scp_ec2_oregon1 $jarFile $remoteFile");
   system ("ssh_ec2_oregon1 $remoteStop");
+  select(undef, undef, undef, 1.000);
   system ("ssh_ec2_oregon1 $remoteStart");
 }
 
