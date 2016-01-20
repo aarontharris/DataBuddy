@@ -175,7 +175,10 @@ public class HttpRequest {
 	 * @return defVal if key did not exist, empty string if key had no value.
 	 */
 	public String getBodyParam( String key, String defVal ) {
-		return bodyParams.getString( key, defVal );
+		if ( bodyParams != null ) {
+			return bodyParams.getString( key, defVal );
+		}
+		return defVal;
 	}
 
 	/**
@@ -276,11 +279,13 @@ public class HttpRequest {
 
 		if ( httpParts.length > 1 ) {
 			body = httpParts[1];
-
+			// if ( body != null && body.length() > 0 ) {
+			// Log.d( "CHAR[0]='0x%08X'", body.charAt( 0 ) );
 			if ( isContentTypeXwwwFormUrlEncoded() ) {
 				bodyParams = new PropsReadWrite();
 				bodyParams.putAll( StrUtl.toMap( body, "=", "&" ) );
 			}
+			// }
 		}
 	}
 }
