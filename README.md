@@ -98,3 +98,4 @@ The project code as it is now, is sort of in a testing state for ease of develop
   - When the ClientConnection first launches, it starts in the Handshake ConnectionDelegate called HandshakeConnection.  This connection authenticates the user and if successful tells the ClientConnection to switch modes from the HandshakeConnection to the UserConnection or SystemConnection.  From there the ClientConnection blocks its thread waiting for I/O.
 
 Please feel free to contact me if you want to know more.
+
