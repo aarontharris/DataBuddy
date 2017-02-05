@@ -27,12 +27,12 @@ public abstract class HttpContextualCmd extends HttpCmd {
 
 			exec( connection, input, resp, db );
 
-			resp.setStatusCode( HttpStatusCode.OK );
+			resp.setStatusCode( HttpStatusCode.OK, null );
 			out.setStatusSuccess( resp );
 		} catch ( FieldException e ) {
 			Log.e( e );
 			resp.setBody( e.getMessage() );
-			resp.setStatusCode( HttpStatusCode.ERR_BAD_REQ );
+			resp.setStatusCode( HttpStatusCode.ERR_BAD_REQ, e );
 			out.setStatusSuccess( resp );
 		} catch ( Exception e ) {
 			Log.e( e );

@@ -2,15 +2,18 @@ package com.leap12.databuddy;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.leap12.common.ClientConnection;
 import com.leap12.common.Crypto;
 import com.leap12.common.Log;
-import com.leap12.databuddy.aspects.HandshakeDelegate;
+import com.leap12.databuddy.aspects.DefaultHandshakeDelegate;
 
 public final class DataBuddy {
 	private static final DataBuddy self = new DataBuddy();
@@ -22,6 +25,10 @@ public final class DataBuddy {
 	private boolean running = false;
 	private WeakHashMap<ClientConnection, Long> connections = null;
 	private CountDownLatch latch = null;
+	private final Map<Long, Integer> threadPort = new HashMap<>();
+	private final Map<Integer, Long> portThread = new HashMap<>();
+
+	// private final Map<Long, Integer> threadPort = new HashMap<>();
 
 	private DataBuddy() {
 		try {
@@ -33,7 +40,7 @@ public final class DataBuddy {
 	}
 
 	public synchronized void startup() throws Exception {
-		startup( HandshakeDelegate.class );
+		startup( DefaultHandshakeDelegate.class );
 	}
 
 	/**
@@ -128,4 +135,33 @@ public final class DataBuddy {
 		}
 	}
 
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+	public void associateThisThreadToPort( int port ) {
+		lock.writeLock().lock();
+		try {
+			threadPort.put( Thread.currentThread().getId(), port );
+			portThread.put( port, Thread.currentThread().getId() );
+		} finally {
+			lock.writeLock().unlock();
+		}
+	}
+
+	public Long getThreadId( int port ) {
+		lock.readLock().lock();
+		try {
+			return portThread.get( port );
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+
+	public Integer getPort() {
+		lock.readLock().lock();
+		try {
+			return threadPort.get( Thread.currentThread().getId() );
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
 }

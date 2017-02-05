@@ -3,6 +3,7 @@ package com.leap12.common;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.leap12.common.StringSubstitutor.SlashPattern;
 import com.leap12.common.props.Props;
 import com.leap12.common.props.PropsRead;
 import com.leap12.common.props.PropsReadWrite;
@@ -132,6 +133,26 @@ public class HttpRequest {
 	}
 
 	/**
+	 * Convert this request to keyval pairs given the slashPattern.<br>
+	 * The slashPattern must follow the {@link StringSubstitutor} convention.<br>
+	 * trailing characters including '?' and onward will be ignored.
+	 * 
+	 * @param slashPattern
+	 * @return null if no match
+	 * @throws Exception
+	 */
+	public Map<String, String> toSlashParams( String slashPattern ) throws Exception {
+		String path = slashPattern;
+		if ( slashPattern.contains( "?" ) ) {
+			String[] parts = slashPattern.split( "\\?" );
+			path = parts[0];
+		}
+		SlashPattern pattern = StringSubstitutor.createSlashPattern( path );
+		Map<String, String> slashParams = StringSubstitutor.fromSlashParams( pattern, getPath() );
+		return slashParams;
+	}
+
+	/**
 	 * @param key - case-sensitive
 	 * @return defVal if key did not exist, empty string if key had no value.
 	 */
@@ -258,7 +279,9 @@ public class HttpRequest {
 
 					if ( pathAndParamsParts.length > 1 ) {
 						String params = pathAndParamsParts[1];
-						queryParams.putAll( StrUtl.toMap( params, "=", "&" ) );
+						if ( params != null && params.length() > 0 ) {
+							queryParams.putAll( StrUtl.toMap( params, "=", "&" ) );
+						}
 					}
 				}
 				headers.put( "path", path );

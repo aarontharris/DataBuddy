@@ -19,6 +19,7 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 
 	@Override
 	protected void onAttached( ClientConnection connection ) throws Exception {
+		super.onAttached( connection );
 		connection.setInactivityTimeout( 10000 );
 		connection.setKeepAlive( false ); // we don't know the client protocol yet, lets assume close when done unless told otherwise
 	}

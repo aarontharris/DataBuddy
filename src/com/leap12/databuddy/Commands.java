@@ -8,12 +8,6 @@ import com.leap12.common.props.Props;
 import com.leap12.common.props.PropsRead;
 import com.leap12.common.props.PropsReadWrite;
 import com.leap12.common.props.PropsWrite;
-import com.leap12.databuddy.commands.dc.AuthCmd;
-import com.leap12.databuddy.commands.dc.GetCmd;
-import com.leap12.databuddy.commands.dc.HelpCmd;
-import com.leap12.databuddy.commands.dc.PutCmd;
-import com.leap12.databuddy.commands.dc.RelayCmd;
-import com.leap12.databuddy.commands.dc.TestCmd;
 import com.leap12.databuddy.commands.http.HttpAddCmd;
 import com.leap12.databuddy.commands.http.HttpEchoCmd;
 import com.leap12.databuddy.commands.http.HttpListCmd;
@@ -285,12 +279,6 @@ public final class Commands {
 
 	}
 
-	public static final TestCmd CMD_TEST = new TestCmd();
-	public static final AuthCmd CMD_AUTH = new AuthCmd();
-	public static final HelpCmd CMD_HELP = new HelpCmd();
-	public static final PutCmd CMD_PUT = new PutCmd();
-	public static final GetCmd CMD_GET = new GetCmd();
-	public static final RelayCmd CMD_RELAY = new RelayCmd();
 	public static final HttpEchoCmd CMD_HTTP_ECHO = new HttpEchoCmd();
 	public static final HttpSaveCmd CMD_HTTP_SAVE = new HttpSaveCmd();
 	public static final HttpReadCmd CMD_HTTP_READ = new HttpReadCmd();
