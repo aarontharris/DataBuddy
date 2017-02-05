@@ -2,6 +2,7 @@ package com.leap12.common;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +13,9 @@ import java.util.Map;
 import com.leap12.common.props.PropsWrite;
 
 public class StrUtl {
+	public static final String charEncoding = "UTF-8";
+	public static final Charset CHARSET_UTF8 = Charset.forName( charEncoding );
+
 	public static final String EMPTY = "";
 
 	public static boolean isNotEmpty( String string ) {

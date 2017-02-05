@@ -2,8 +2,11 @@ package com.leap12.databuddy.data;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import com.leap12.databuddy.data.var.VarType;
 
 public final class ResultSetJSonAdapter {
 
@@ -15,30 +18,49 @@ public final class ResultSetJSonAdapter {
 	 * 
 	 * @return null when no record.
 	 **/
-	public static final JSONObject toJson( ResultSet rs ) throws Exception {
+	public static final JSONObject toJsonOne( ResultSet rs ) throws Exception {
 		if ( rs.next() ) {
-			return toJson( rs, rs.getMetaData(), rs.getMetaData().getColumnCount() );
+			return VarType.fromResultSet( rs, null ).toJsonObject();
 		}
 		return null;
 	}
 
 	/**
-	 * When you expect a many records
-	 * 
 	 * @return never null, just an empty array
 	 */
-	public static final JSONArray toJsonArray( ResultSet rs ) throws Exception {
+	public static final JSONArray toJsonArrayOfKeyVals( ResultSet rs ) throws Exception {
 		JSONArray json = new JSONArray();
-		ResultSetMetaData meta = rs.getMetaData();
-		int columnCount = meta.getColumnCount();
-
 		while ( rs.next() ) {
-			json.put( toJson( rs, meta, columnCount ) );
+			json.put( VarType.fromResultSet( rs, null ).toJsonObject() );
 		}
-
 		return json;
 	}
 
+	/**
+	 * @return never null, just an empty array
+	 */
+	public static final JSONArray toJsonArrayOfVals( ResultSet rs ) throws Exception {
+		JSONArray json = new JSONArray();
+		while ( rs.next() ) {
+			VarType.fromResultSet( rs, null ).toJsonArray( json );
+		}
+		return json;
+	}
+
+	/**
+	 * When you expect a many records and want them collapsed into a map
+	 * 
+	 * @return never null, just an empty object
+	 */
+	public static final JSONObject toJsonMap( ResultSet rs ) throws Exception {
+		JSONObject json = new JSONObject();
+		while ( rs.next() ) {
+			VarType.fromResultSet( rs, null ).toJsonObject( json );
+		}
+		return json;
+	}
+
+	// FIXME: dont need this but it looks useful later
 	private static final JSONObject toJson( ResultSet rs, ResultSetMetaData meta, int columnCount ) throws Exception {
 		JSONObject jsonObject = new JSONObject();
 

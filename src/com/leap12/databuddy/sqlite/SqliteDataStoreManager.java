@@ -1,6 +1,7 @@
 package com.leap12.databuddy.sqlite;
 
 import java.lang.ref.WeakReference;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,14 +20,20 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.google.gson.JsonObject;
+import com.leap12.common.Coercer;
 import com.leap12.common.Log;
 import com.leap12.common.StrUtl;
 import com.leap12.databuddy.data.DataStore;
 import com.leap12.databuddy.data.DataStoreManager;
 import com.leap12.databuddy.data.ResultSetJSonAdapter;
+import com.leap12.databuddy.data.var.Type;
+import com.leap12.databuddy.data.var.VarType;
 
 public class SqliteDataStoreManager implements DataStoreManager {
+	private static final String charEncoding = "UTF-8";
+	private static final Charset CHARSET_UTF8 = Charset.forName( charEncoding );
+	private static final int MAX_LIMIT = 50;
+
 	private String mDbName = "dataBuddy.db";
 
 	protected SqliteDataStoreManager( String dbName ) {
@@ -97,14 +104,29 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		return String.format( format, table );
 	}
 
-	private static final String toQueryInsert( String table, String idKey, Type type, String strVal, byte[] byteVal, int intVal, float floatVal ) {
+	private static final String toQueryMetaSchema( String table ) {
+		String format = ""
+		        + "CREATE TABLE %s "
+		        + "("
+		        + "  idkey          TEXT PRIMARY KEY NOT NULL, "
+		        + "  "
+		        + "  valtype        INT NOT NULL, "
+		        + "  textval        TEXT, "
+		        + "  blobval        BLOB, "
+		        + "  intval         INT, "
+		        + "  floatval       REAL "
+		        + ")";
+		return String.format( format, table );
+	}
+
+	private static final String toQueryInsertOrReplace( String table, String idKey, Type type, String strVal, byte[] byteVal, int intVal, float floatVal ) {
 		String format = "INSERT OR REPLACE INTO %s "
 		        + "(idkey,valtype,textval,blobval,intval,floatval) VALUES "
 		        + "('%s', %s, '%s', '%s', %s, %s );";
 		return String.format( format, table, idKey, type.getTypeId(), strVal, byteVal, intVal, floatVal );
 	}
 
-	private static final String toQueryInsertBind( String table ) {
+	private static final String toQueryInsertOrReplaceBind( String table ) {
 		String format = "INSERT OR REPLACE INTO " + table + " "
 		        + "(idkey,valtype,textval,blobval,intval,floatval) VALUES "
 		        + "(?,?,?,?,?,?);";
@@ -121,65 +143,14 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		return String.format( format, table, key );
 	}
 
-
-
-	private enum Type {
-		// Careful this order can never change without a data migration
-		// as the ids will be stored in the database and may may the wrong value if changed.
-		BooleanValue( 1, "intval", Boolean.class ),
-		IntegerValue( 2, "intval", Integer.class ),
-		FloatValue( 3, "floatval", Float.class ),
-		StringValue( 4, "textval", String.class ),
-		BlobValue( 5, "blobval", String.class ),
-		JsonValue( 6, "textval", JsonObject.class );
-
-		private static final Type[] idMap = new Type[] {
-		        // ZERO is invalid
-		        BooleanValue, // 1
-		        IntegerValue, // 2
-		        FloatValue, // 3
-		        StringValue, // 4
-		        BlobValue, // 5
-		        JsonValue, // 6
-		};
-
-		private int typeId;
-		private String fieldName;
-		private Class<?> type;
-
-		Type( int typeId, String fieldName, Class<?> type ) {
-			this.typeId = typeId;
-			this.fieldName = fieldName;
-			this.type = type;
-		}
-
-		public int getTypeId() {
-			return typeId;
-		}
-
-		public String getFieldName() {
-			return fieldName;
-		}
-
-		public Class<?> getType() {
-			return type;
-		}
-
-		public static Type fromTypeId( int id ) {
-			return idMap[id - 1]; // we do the -1 so we can do 1-5 instead of 0-4 because we dont want to use zeros in the database.
-		}
+	private static final String toQuerySelectMany( String table, Integer offset, Integer limit ) {
+		offset = ( offset == null ) ? 0 : offset;
+		limit = ( limit == null || limit >= MAX_LIMIT ) ? MAX_LIMIT : limit;
+		String format = "SELECT * FROM %s ORDER BY idkey LIMIT %s OFFSET %s";
+		return String.format( format, table, limit, offset );
 	}
 
 
-
-	private static class VarType {
-		String key;
-		int type;
-		String textVal;
-		byte[] blobVal;
-		int intVal;
-		float floatVal;
-	}
 
 
 
@@ -220,9 +191,32 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		}
 
 		@Override
+		public JSONArray loadArrayOfVals( String topic, String subtopic, Integer offset, Integer limit ) throws Exception {
+			String table = toTableName( topic, subtopic );
+			return selectArrayOfVals( table, offset, limit );
+		}
+
+		@Override
+		public JSONArray loadArrayOfKeyVals( String topic, String subtopic, Integer offset, Integer limit ) throws Exception {
+			String table = toTableName( topic, subtopic );
+			return selectArrayOfKeyVals( table, offset, limit );
+		}
+
+		@Override
+		public JSONObject loadMap( String topic, String subtopic, Integer offset, Integer limit ) throws Exception {
+			String table = toTableName( topic, subtopic );
+			return selectMap( table, offset, limit );
+		}
+
+		@Override
 		public void saveBlob( String topic, String subtopic, String key, byte[] value ) throws Exception {
 			String table = toTableName( topic, subtopic );
 			insertOrReplace( table, Type.BlobValue, key, null, value, 0, 0f );
+		}
+
+		@Override
+		public void saveBlobUtf8( String topic, String subtopic, String key, String value ) throws Exception {
+			saveBlob( topic, subtopic, key, value.getBytes( CHARSET_UTF8 ) );
 		}
 
 		@Override
@@ -231,6 +225,15 @@ public class SqliteDataStoreManager implements DataStoreManager {
 			VarType row = selectOne( table, key, Type.BlobValue );
 			if ( row != null ) {
 				return row.blobVal;
+			}
+			return null;
+		}
+
+		@Override
+		public String loadBlobUtf8( String topic, String subtopic, String key ) throws Exception {
+			byte[] value = loadBlob( topic, subtopic, key );
+			if ( value != null ) {
+				return new String( value, CHARSET_UTF8 );
 			}
 			return null;
 		}
@@ -306,84 +309,134 @@ public class SqliteDataStoreManager implements DataStoreManager {
 			}
 		}
 
-		private JSONObject selectOne( String query ) throws Exception {
-			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery( query );
-			JSONObject json = ResultSetJSonAdapter.toJson( rs );
-			rs.close();
-			stmt.close();
-			return json;
+		private <T> T selectMany( String query, Coercer<ResultSet, T> coercer ) throws Exception {
+			Statement stmt = null;
+			ResultSet rs = null;
+			T out = null;
+			try {
+				stmt = connection.createStatement();
+				rs = stmt.executeQuery( query );
+				// json = ResultSetJSonAdapter.toJsonArrayOfVals( rs );
+				out = coercer.coerce( rs );
+			} finally {
+				if ( rs != null ) {
+					rs.close();
+				}
+				if ( stmt != null ) {
+					stmt.close();
+				}
+			}
+			return out;
 		}
 
-		private JSONArray selectMany( String query ) throws Exception {
-			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery( query );
-			JSONArray json = ResultSetJSonAdapter.toJsonArray( rs );
-			rs.close();
-			stmt.close();
+		private JSONArray selectArrayOfVals( String table, Integer offset, Integer limit ) throws Exception {
+			String query = SqliteDataStoreManager.toQuerySelectMany( table, offset, limit );
+			return selectMany( query, ( v ) -> {
+				try {
+					return ResultSetJSonAdapter.toJsonArrayOfVals( v );
+				} catch ( Exception e ) {
+					Log.e( e );
+					return new JSONArray();
+				}
+			} );
+		}
+
+		private JSONArray selectArrayOfKeyVals( String table, Integer offset, Integer limit ) throws Exception {
+			String query = SqliteDataStoreManager.toQuerySelectMany( table, offset, limit );
+			return selectMany( query, ( v ) -> {
+				try {
+					return ResultSetJSonAdapter.toJsonArrayOfKeyVals( v );
+				} catch ( Exception e ) {
+					Log.e( e );
+					return new JSONArray();
+				}
+			} );
+		}
+
+		private JSONObject selectMap( String table, Integer offset, Integer limit ) throws Exception {
+			String query = SqliteDataStoreManager.toQuerySelectMany( table, offset, limit );
+			return selectMany( query, ( v ) -> {
+				try {
+					return ResultSetJSonAdapter.toJsonMap( v );
+				} catch ( Exception e ) {
+					Log.e( e );
+					return new JSONObject();
+				}
+			} );
+		}
+
+		private JSONObject selectOne( String query ) throws Exception {
+			Statement stmt = null;
+			ResultSet rs = null;
+			JSONObject json = null;
+			try {
+				stmt = connection.createStatement();
+				rs = stmt.executeQuery( query );
+				json = ResultSetJSonAdapter.toJsonOne( rs );
+			} finally {
+				if ( rs != null ) {
+					rs.close();
+				}
+				if ( stmt != null ) {
+					stmt.close();
+				}
+			}
 			return json;
 		}
 
 		private VarType selectOne( String table, String key, Type type ) throws Exception {
-			String query = SqliteDataStoreManager.toQuerySelect( table, key );
-			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery( query );
+			Statement stmt = null;
+			ResultSet rs = null;
 			VarType row = null;
-			if ( rs.next() ) {
-				row = new VarType();
-				row.type = rs.getInt( "valtype" );
-				if ( type.getTypeId() == row.type ) {
-					switch ( type ) {
-					case BlobValue:
-						row.blobVal = rs.getBytes( type.getFieldName() );
-						break;
-					case StringValue:
-					case JsonValue:
-						row.textVal = rs.getString( type.getFieldName() );
-						break;
-					case IntegerValue:
-					case BooleanValue:
-						row.intVal = rs.getInt( type.getFieldName() );
-						break;
-					case FloatValue:
-						row.floatVal = rs.getFloat( type.getFieldName() );
-						break;
-					default:
-						throw new UnsupportedOperationException( type + " not yet supported" );
-					}
-				} else {
-					if ( row.type == 0 ) {
-						throw new IllegalStateException( "Type mismatch, requested " + type + " but found no type" );
-					} else {
-						throw new IllegalStateException( "Type mismatch, requested " + type + " but found " + Type.fromTypeId( row.type ) );
-					}
+			try {
+				String query = SqliteDataStoreManager.toQuerySelect( table, key );
+				stmt = connection.createStatement();
+				rs = stmt.executeQuery( query );
+				if ( rs.next() ) {
+					row = VarType.fromResultSet( rs, type );
+				}
+			} finally {
+				if ( rs != null ) {
+					rs.close();
+				}
+				if ( stmt != null ) {
+					stmt.close();
 				}
 			}
-			rs.close();
-			stmt.close();
 			return row;
 		}
 
+
 		// just synchronize the whole method, it should be very fast except the one time and everyone needs to wait for that one anyway
 		private synchronized void ensureTable( String table ) throws Exception {
-			if ( !knownTables.contains( table ) ) {
-				Statement stmt = connection.createStatement();
-				String sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + table + "'";
-				ResultSet rs = stmt.executeQuery( sql );
-				if ( rs.next() && table.equals( rs.getString( "name" ) ) ) {
-					rs.close();
+			Statement stmt = null;
+			ResultSet rs = null;
+			try {
+				if ( !knownTables.contains( table ) ) {
+					stmt = connection.createStatement();
+					String sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + table + "'";
+					rs = stmt.executeQuery( sql );
+					if ( rs.next() && table.equals( rs.getString( "name" ) ) ) {
+						rs.close();
+						stmt.close();
+						knownTables.add( table );
+						return;
+					}
+
+					// I have confirmed that there is no limit to the number of tables in SQLite (other than physical storage space)
+					stmt.executeUpdate( SqliteDataStoreManager.toQuerySchema( table ) );
 					stmt.close();
 					knownTables.add( table );
-					return;
 				}
-
-				// I have confirmed that there is no limit to the number of tables in SQLite (other than physical storage space)
-				stmt.executeUpdate( SqliteDataStoreManager.toQuerySchema( table ) );
-				stmt.close();
-				knownTables.add( table );
+			} finally {
+				if ( rs != null && !rs.isClosed() ) {
+					rs.close();
+				}
+				if ( stmt != null && !stmt.isClosed() ) {
+					stmt.close();
+				}
 			}
 		}
-
 
 		private void update( String query ) throws Exception {
 			Statement stmt = connection.createStatement();
@@ -400,7 +453,7 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		// hours.
 		private void insertOrReplace( String table, String key, String value ) throws Exception {
 			ensureTable( table );
-			String query = SqliteDataStoreManager.toQueryInsert( table, key, Type.StringValue, value, null, 0, 0f );
+			String query = SqliteDataStoreManager.toQueryInsertOrReplace( table, key, Type.StringValue, value, null, 0, 0f );
 			update( query );
 		}
 
@@ -408,10 +461,10 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		        String textVal, byte[] byteVal, int intVal, float floatVal )
 		        throws Exception {
 			ensureTable( table );
-			String query = SqliteDataStoreManager.toQueryInsertBind( table );
+			String query = SqliteDataStoreManager.toQueryInsertOrReplaceBind( table );
 			PreparedStatement stmt = connection.prepareStatement( query );
 			stmt.setString( 1, key );
-			stmt.setInt( 2, type.typeId );
+			stmt.setInt( 2, type.getTypeId() );
 			stmt.setString( 3, textVal );
 			stmt.setBytes( 4, byteVal );
 			stmt.setInt( 5, intVal );

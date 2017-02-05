@@ -6,6 +6,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
@@ -91,12 +92,38 @@ public final class Dao implements DataStore {
 	}
 
 	@Override
+	public JSONArray loadArrayOfVals( String topic, String subtopic, Integer offset, Integer limit ) throws Exception {
+		return mDataStore.loadArrayOfVals( topic, subtopic, offset, limit );
+	}
+
+	@Override
+	public JSONArray loadArrayOfKeyVals( String topic, String subtopic, Integer offset, Integer limit ) throws Exception {
+		return mDataStore.loadArrayOfKeyVals( topic, subtopic, offset, limit );
+	}
+
+	@Override
+	public JSONObject loadMap( String topic, String subtopic, Integer offset, Integer limit ) throws Exception {
+		return mDataStore.loadMap( topic, subtopic, offset, limit );
+	}
+
+	@Override
 	public void saveBlob( String topic, String subtopic, String key, byte[] value ) throws Exception {
+		mDataStore.saveBlob( topic, subtopic, key, value );
+	}
+
+	@Override
+	public void saveBlobUtf8( String topic, String subtopic, String key, String value ) throws Exception {
+		mDataStore.saveBlobUtf8( topic, subtopic, key, value );
 	}
 
 	@Override
 	public byte[] loadBlob( String topic, String subtopic, String key ) throws Exception {
-		return null;
+		return mDataStore.loadBlob( topic, subtopic, key );
+	}
+
+	@Override
+	public String loadBlobUtf8( String topic, String subtopic, String key ) throws Exception {
+		return mDataStore.loadBlobUtf8( topic, subtopic, key );
 	}
 
 	@Override

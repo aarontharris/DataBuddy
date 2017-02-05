@@ -76,6 +76,8 @@ public class HandshakeDelegate extends BaseConnectionDelegate {
 		commands.add( Commands.CMD_HTTP_SAVE );
 		commands.add( Commands.CMD_HTTP_READ );
 		commands.add( Commands.CMD_HTTP_ECHO );
+		commands.add( Commands.CMD_HTTP_ADD );
+		commands.add( Commands.CMD_HTTP_LIST );
 
 		Iterable<HttpCmd> bestFirst = new HttpCmdFactory( commands ).bestFirst( request );
 		for ( HttpCmd httpCmd : bestFirst ) {
