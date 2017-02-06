@@ -1,7 +1,7 @@
 package com.leap12.common.http.err;
 
-import com.leap12.common.HttpResponse.HttpException;
-import com.leap12.common.HttpResponse.HttpStatusCode;
+import com.leap12.common.http.HttpResponse.HttpException;
+import com.leap12.common.http.HttpResponse.HttpStatusCode;
 
 @SuppressWarnings( "serial" )
 public class HttpExceptionUnauthorized extends HttpException {

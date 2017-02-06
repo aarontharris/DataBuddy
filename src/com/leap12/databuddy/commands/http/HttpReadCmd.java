@@ -2,10 +2,10 @@ package com.leap12.databuddy.commands.http;
 
 import java.sql.SQLException;
 
-import com.leap12.common.HttpRequest;
-import com.leap12.common.HttpResponse;
 import com.leap12.common.Log;
 import com.leap12.common.StrUtl;
+import com.leap12.common.http.HttpRequest;
+import com.leap12.common.http.HttpResponse;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.data.DataStore;
 

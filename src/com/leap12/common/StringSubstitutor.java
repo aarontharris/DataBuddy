@@ -667,6 +667,7 @@ public class StringSubstitutor {
 	public static Map<String, String> fromSlashParams( SlashPattern pattern, String slashParams ) {
 		Matcher m = pattern.pattern.matcher( slashParams );
 		if ( m.matches() ) {
+			m.reset();
 			Map<String, String> out = new HashMap<>();
 			while ( m.find() ) {
 				for ( int i = 0; i < m.groupCount(); i++ ) {

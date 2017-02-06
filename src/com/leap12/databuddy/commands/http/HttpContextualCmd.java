@@ -1,9 +1,9 @@
 package com.leap12.databuddy.commands.http;
 
-import com.leap12.common.HttpRequest;
-import com.leap12.common.HttpResponse;
-import com.leap12.common.HttpResponse.HttpStatusCode;
 import com.leap12.common.Log;
+import com.leap12.common.http.HttpRequest;
+import com.leap12.common.http.HttpResponse;
+import com.leap12.common.http.HttpResponse.HttpStatusCode;
 import com.leap12.common.props.PropsRead.FieldException;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands.CmdResponse;

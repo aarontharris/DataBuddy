@@ -5,10 +5,10 @@ import java.sql.SQLException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.leap12.common.HttpRequest;
-import com.leap12.common.HttpResponse;
 import com.leap12.common.Log;
 import com.leap12.common.StrUtl;
+import com.leap12.common.http.HttpRequest;
+import com.leap12.common.http.HttpResponse;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.data.DataStore;
 

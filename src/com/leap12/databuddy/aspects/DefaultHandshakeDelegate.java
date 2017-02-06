@@ -5,15 +5,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.leap12.common.HttpRequest;
-import com.leap12.common.HttpResponse;
-import com.leap12.common.HttpResponse.HttpException;
-import com.leap12.common.HttpResponse.HttpStatusCode;
 import com.leap12.common.Log;
 import com.leap12.common.NeverThrows;
 import com.leap12.common.NonNull;
 import com.leap12.common.Reflex;
 import com.leap12.common.StringSubstitutor;
+import com.leap12.common.http.HttpRequest;
+import com.leap12.common.http.HttpResponse;
+import com.leap12.common.http.HttpResponse.HttpException;
+import com.leap12.common.http.HttpResponse.HttpStatusCode;
+import com.leap12.common.http.annot.HttpGet;
+import com.leap12.common.http.annot.HttpPost;
 import com.leap12.common.http.err.HttpExceptionBadRequest;
 import com.leap12.common.http.err.HttpExceptionInternal;
 import com.leap12.common.http.err.HttpExceptionNotImplemented;
@@ -24,7 +26,6 @@ import com.leap12.databuddy.Commands;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.commands.http.HttpCmd;
 import com.leap12.databuddy.commands.http.HttpCmdFactory;
-import com.leap12.databuddy.commands.http.annotation.HttpGet;
 
 /**
  * The default launchpad connection. It serves as the Connection "Factory", routing a client to the appropriate connection based on how they connect.
@@ -75,6 +76,39 @@ public class DefaultHandshakeDelegate extends BaseConnectionDelegate {
 		return false;
 	}
 
+	private PropsRead parseHttpRequest( HttpRequest request, Method method ) throws Exception {
+		if ( method.isAnnotationPresent( request.getMethod().getAnnotationClass() ) ) {
+
+			String uri = null;
+
+			switch ( request.getMethod() ) {
+			case GET:
+				uri = method.getAnnotation( HttpGet.class ).value();
+				break;
+			case POST:
+				uri = method.getAnnotation( HttpPost.class ).value();
+				break;
+			default:
+				throw new UnsupportedOperationException( "Not Yet" );
+			}
+
+			// acquire data from proposed match
+			Map<String, String> params = request.toSlashParams( uri );
+			if ( params != null ) {
+				params.putAll( request.getQueryParams().toMap() );
+				PropsReadWrite propsrw = new PropsReadWrite();
+				propsrw.putAll( params );
+
+				// validate the format or fail
+				StringSubstitutor strsub = new StringSubstitutor();
+				strsub.substitute( uri, params );
+
+				return propsrw;
+			}
+		}
+
+		return null;
+	}
 
 	@NonNull
 	@NeverThrows
@@ -89,25 +123,9 @@ public class DefaultHandshakeDelegate extends BaseConnectionDelegate {
 			// Find a match
 			try {
 				for ( Method m : methods ) {
-					if ( m.isAnnotationPresent( HttpGet.class ) ) {
-						HttpGet annotation = m.getAnnotation( HttpGet.class );
-						uri = annotation.value();
-
-						// acquire data from proposed match
-						Map<String, String> params = request.toSlashParams( uri );
-						if ( params == null ) {
-							continue; // did not match
-						}
-
-						params.putAll( request.getQueryParams().toMap() );
-						PropsReadWrite propsrw = new PropsReadWrite();
-						propsrw.putAll( params );
-
-						// validate the format or fail
-						StringSubstitutor strsub = new StringSubstitutor();
-						strsub.substitute( annotation.value(), params );
-
-						props = propsrw;
+					PropsRead p = parseHttpRequest( request, m );
+					if ( p != null ) {
+						props = p;
 						method = m;
 						break;
 					}
@@ -119,6 +137,7 @@ public class DefaultHandshakeDelegate extends BaseConnectionDelegate {
 			} catch ( HttpException e ) {
 				throw e;
 			} catch ( Exception e ) {
+				Log.e( request.describe() );
 				throw new HttpExceptionBadRequest( "Bad Request " + request.getPath(), e );
 			}
 

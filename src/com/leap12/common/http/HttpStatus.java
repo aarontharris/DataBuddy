@@ -25,7 +25,7 @@
  *
  */
 
-package com.leap12.common;
+package com.leap12.common.http;
 
 /**
  * Constants enumerating the HTTP status codes.

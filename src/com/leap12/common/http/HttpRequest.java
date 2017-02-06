@@ -1,8 +1,10 @@
-package com.leap12.common;
+package com.leap12.common.http;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import com.leap12.common.StrUtl;
+import com.leap12.common.StringSubstitutor;
 import com.leap12.common.StringSubstitutor.SlashPattern;
 import com.leap12.common.props.Props;
 import com.leap12.common.props.PropsRead;
@@ -21,6 +23,7 @@ public class HttpRequest {
 		return out;
 	}
 
+	private HttpMethod method;
 	private Map<String, String> headers;
 	private PropsReadWrite bodyParams;
 	private PropsReadWrite queryParams;
@@ -108,16 +111,8 @@ public class HttpRequest {
 		return getHeader( "host" );
 	}
 
-	public String getMethod() {
-		return getHeader( "method" );
-	}
-
-	public boolean isGet() {
-		return getHeader( "method", "" ).equalsIgnoreCase( "GET" );
-	}
-
-	public boolean isPost() {
-		return getHeader( "method", "" ).equalsIgnoreCase( "POST" );
+	public HttpMethod getMethod() {
+		return method;
 	}
 
 	public String getContentType() {
@@ -265,8 +260,9 @@ public class HttpRequest {
 			if ( i == 0 ) { // METHOD TYPE, PATH, PARAMS
 				String[] parts = line.split( " " );
 
-				String method = parts[0];
-				headers.put( "method", method );
+				String methodStr = parts[0];
+				method = HttpMethod.valueOf( methodStr.toUpperCase() );
+				headers.put( "method", methodStr );
 
 				String httpVersion = parts[2].split( "/" )[1];
 				headers.put( "httpversion", httpVersion );

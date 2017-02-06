@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import com.leap12.common.HttpRequest;
+import com.leap12.common.http.HttpRequest;
 
 public class HttpCmdFactory {
 
