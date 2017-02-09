@@ -6,7 +6,7 @@ import org.json.JSONObject;
 import com.leap12.databuddy.data.BaseDao.InsideLock;
 
 
-public interface DataStore {
+public interface DataStoreOld extends DataStore {
 
 	public void begin();
 

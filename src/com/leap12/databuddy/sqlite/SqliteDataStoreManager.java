@@ -14,8 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,6 +22,7 @@ import org.json.JSONObject;
 import com.leap12.common.Coercer;
 import com.leap12.common.Log;
 import com.leap12.common.StrUtl;
+import com.leap12.databuddy.data.BaseDao.InsideLock;
 import com.leap12.databuddy.data.DataStore;
 import com.leap12.databuddy.data.DataStoreManager;
 import com.leap12.databuddy.data.ResultSetJSonAdapter;
@@ -73,7 +73,9 @@ public class SqliteDataStoreManager implements DataStoreManager {
 			store = new SqliteDataStore();
 			String pathToDbStr = String.format( "./db/%s/%s", shardKey, mDbName );
 			Path pathToFile = Paths.get( pathToDbStr );
+			Log.d( "obtaining '%s'", pathToFile.toAbsolutePath().toString() );
 			if ( !Files.exists( pathToFile ) ) {
+				Log.d( " - does not exist, creating '%s'", pathToDbStr );
 				Files.createDirectories( pathToFile.getParent() );
 				Files.createFile( pathToFile );
 			}
@@ -95,21 +97,6 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		        + "CREATE TABLE %s "
 		        + "("
 		        + "  idkey          TEXT PRIMARY KEY NOT NULL, "
-		        + "  valtype        INT NOT NULL, "
-		        + "  textval        TEXT, "
-		        + "  blobval        BLOB, "
-		        + "  intval         INT, "
-		        + "  floatval       REAL "
-		        + ")";
-		return String.format( format, table );
-	}
-
-	private static final String toQueryMetaSchema( String table ) {
-		String format = ""
-		        + "CREATE TABLE %s "
-		        + "("
-		        + "  idkey          TEXT PRIMARY KEY NOT NULL, "
-		        + "  "
 		        + "  valtype        INT NOT NULL, "
 		        + "  textval        TEXT, "
 		        + "  blobval        BLOB, "
@@ -158,7 +145,8 @@ public class SqliteDataStoreManager implements DataStoreManager {
 	public static class SqliteDataStore implements DataStore {
 		private Connection connection;
 		private final Set<String> knownTables; // TODO: maybe make this a shared resource for all connections? Beware major concurrency ClusterF
-		private final Lock lock = new ReentrantLock();
+		private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+		private ResultSet executeQuery;
 
 		public SqliteDataStore() {
 			knownTables = new HashSet<>();
@@ -166,12 +154,12 @@ public class SqliteDataStoreManager implements DataStoreManager {
 
 		@Override
 		public void begin() {
-			lock.lock();
+			lock.writeLock().lock();
 		}
 
 		@Override
 		public void end() {
-			lock.unlock();
+			lock.writeLock().unlock();
 		}
 
 		@Override
@@ -333,7 +321,7 @@ public class SqliteDataStoreManager implements DataStoreManager {
 			String query = SqliteDataStoreManager.toQuerySelectMany( table, offset, limit );
 			return selectMany( query, ( v ) -> {
 				try {
-					return ResultSetJSonAdapter.toJsonArrayOfVals( v );
+					return ResultSetJSonAdapter.varToJsonArrayOfVals( v );
 				} catch ( Exception e ) {
 					Log.e( e );
 					return new JSONArray();
@@ -345,7 +333,7 @@ public class SqliteDataStoreManager implements DataStoreManager {
 			String query = SqliteDataStoreManager.toQuerySelectMany( table, offset, limit );
 			return selectMany( query, ( v ) -> {
 				try {
-					return ResultSetJSonAdapter.toJsonArrayOfKeyVals( v );
+					return ResultSetJSonAdapter.varToJsonArrayOfKeyVals( v );
 				} catch ( Exception e ) {
 					Log.e( e );
 					return new JSONArray();
@@ -357,31 +345,12 @@ public class SqliteDataStoreManager implements DataStoreManager {
 			String query = SqliteDataStoreManager.toQuerySelectMany( table, offset, limit );
 			return selectMany( query, ( v ) -> {
 				try {
-					return ResultSetJSonAdapter.toJsonMap( v );
+					return ResultSetJSonAdapter.varToJsonMap( v );
 				} catch ( Exception e ) {
 					Log.e( e );
 					return new JSONObject();
 				}
 			} );
-		}
-
-		private JSONObject selectOne( String query ) throws Exception {
-			Statement stmt = null;
-			ResultSet rs = null;
-			JSONObject json = null;
-			try {
-				stmt = connection.createStatement();
-				rs = stmt.executeQuery( query );
-				json = ResultSetJSonAdapter.toJsonOne( rs );
-			} finally {
-				if ( rs != null ) {
-					rs.close();
-				}
-				if ( stmt != null ) {
-					stmt.close();
-				}
-			}
-			return json;
 		}
 
 		private VarType selectOne( String table, String key, Type type ) throws Exception {
@@ -405,7 +374,6 @@ public class SqliteDataStoreManager implements DataStoreManager {
 			}
 			return row;
 		}
-
 
 		// just synchronize the whole method, it should be very fast except the one time and everyone needs to wait for that one anyway
 		private synchronized void ensureTable( String table ) throws Exception {
@@ -438,7 +406,50 @@ public class SqliteDataStoreManager implements DataStoreManager {
 			}
 		}
 
-		private void update( String query ) throws Exception {
+		/**
+		 * Best practice is to ensure your tables during startup, not while open to users.
+		 * 
+		 * @param table name of the table to create - used to check if it already exists.
+		 * @param query
+		 * @throws Exception
+		 */
+		@Override
+		public synchronized boolean ensureTable( String table, String query ) throws Exception {
+			Statement stmt = null;
+			ResultSet rs = null;
+			try {
+				if ( !knownTables.contains( table ) ) {
+					stmt = connection.createStatement();
+					String sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + table + "'";
+					rs = stmt.executeQuery( sql );
+					if ( rs.next() && table.equals( rs.getString( "name" ) ) ) {
+						rs.close();
+						stmt.close();
+						knownTables.add( table );
+						return false;
+					}
+
+					// I have confirmed that there is no limit to the number of tables in SQLite (other than physical storage space)
+					stmt.executeUpdate( query );
+					stmt.close();
+					knownTables.add( table );
+					return true;
+				}
+			} catch ( Exception e ) {
+				throw new IllegalStateException( "Could not create table " + table, e );
+			} finally {
+				if ( rs != null && !rs.isClosed() ) {
+					rs.close();
+				}
+				if ( stmt != null && !stmt.isClosed() ) {
+					stmt.close();
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public void update( String query ) throws Exception {
 			Statement stmt = connection.createStatement();
 			try {
 				stmt.executeUpdate( query );
@@ -446,6 +457,47 @@ public class SqliteDataStoreManager implements DataStoreManager {
 				stmt.close();
 			}
 		}
+
+		@Override
+		public JSONObject select( String query ) throws Exception {
+			Statement stmt = null;
+			ResultSet rs = null;
+			JSONObject json = null;
+			try {
+				stmt = connection.createStatement();
+				rs = stmt.executeQuery( query );
+				json = ResultSetJSonAdapter.toJson( rs );
+			} finally {
+				if ( rs != null ) {
+					rs.close();
+				}
+				if ( stmt != null ) {
+					stmt.close();
+				}
+			}
+			return json;
+		}
+
+		@Override
+		public JSONObject selectOne( String query ) throws Exception {
+			Statement stmt = null;
+			ResultSet rs = null;
+			JSONObject json = null;
+			try {
+				stmt = connection.createStatement();
+				rs = stmt.executeQuery( query );
+				json = ResultSetJSonAdapter.toJsonOne( rs );
+			} finally {
+				if ( rs != null ) {
+					rs.close();
+				}
+				if ( stmt != null ) {
+					stmt.close();
+				}
+			}
+			return json;
+		}
+
 
 		// FIXME: Need to delete rows when value is null to reduce garbage
 		// FIXME: Need to delete table when rows is zero to reduce garbage
@@ -484,6 +536,11 @@ public class SqliteDataStoreManager implements DataStoreManager {
 		// and make the data easier for human consumption when topics and subtopics are not user generated.
 		private String toTableName( String topic, String subtopic ) {
 			return topic + "_" + subtopic;
+		}
+
+		@Override
+		public void doInLock( InsideLock cmd ) {
+			throw new UnsupportedOperationException();
 		}
 	}
 }

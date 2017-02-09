@@ -19,7 +19,7 @@ import com.leap12.databuddy.sqlite.SqliteDataStoreManager;
 // 2. Control, ensure one datastore per user connection
 // 3. Encapsulation, added conveniences that are specific to the application but Sqlite doesn't care about.
 // 4. Cleanliness, no need to clutter up the SqliteDataStore or its Manager with lockness mosters.
-public final class Dao implements DataStore {
+public final class BaseDao implements DataStore {
 
 	// By extending it, we expose SqliteDataStoreManagers protected constructor, so only the Dao will secretely create an instance
 	// As we don't really want the SqliteDataStoreManager exposed to the rest of the code base since it's supposed to be a swappable part.
@@ -28,14 +28,14 @@ public final class Dao implements DataStore {
 
 	public static final Gson gson = new GsonBuilder().create();
 	private static final String DEFAULT_SHARD_KEY = "default";
-	private static final WeakHashMap<BaseConnectionDelegate, Map<String, Dao>> daos = new WeakHashMap<>();
+	private static final WeakHashMap<Object, Map<String, BaseDao>> daos = new WeakHashMap<>();
 	// private static final LRU<Dao> daos = new LRU<>( 10000 );
 	private static Lock lock = new ReentrantLock();
 
 	// FIXME: needs a LRU across all connections
 
 	/** Thread safe */
-	public static final Dao getInstance( BaseConnectionDelegate connection, ShardKey shardKey ) throws Exception {
+	public static final DataStore getInstance( Object scopeObject, ShardKey shardKey ) throws Exception {
 		lock.lock(); // this should be incredibly fast so lets not bother with the reentranceness
 		long start = System.currentTimeMillis();
 		try {
@@ -44,15 +44,15 @@ public final class Dao implements DataStore {
 				shardKeyStr = shardKey.toString();
 			}
 
-			Map<String, Dao> shards = daos.get( connection );
+			Map<String, BaseDao> shards = daos.get( scopeObject );
 			if ( shards == null ) {
 				shards = new HashMap<>();
-				daos.put( connection, shards );
+				daos.put( scopeObject, shards );
 			}
 
-			Dao dao = shards.get( shardKeyStr );
+			BaseDao dao = shards.get( shardKeyStr );
 			if ( dao == null ) {
-				dao = new Dao( dbFactory.attainDataStore( shardKeyStr ) );
+				dao = new BaseDao( dbFactory.attainDataStore( shardKeyStr ) );
 				shards.put( shardKeyStr, dao );
 			}
 
@@ -77,7 +77,7 @@ public final class Dao implements DataStore {
 
 	private final DataStore mDataStore;
 
-	private Dao( DataStore store ) {
+	private BaseDao( DataStore store ) {
 		this.mDataStore = store;
 	}
 
@@ -163,6 +163,26 @@ public final class Dao implements DataStore {
 	}
 
 	@Override
+	public boolean ensureTable( String table, String query ) throws Exception {
+		return mDataStore.ensureTable( table, query );
+	}
+
+	@Override
+	public void update( String query ) throws Exception {
+		mDataStore.update( query );
+	}
+
+	@Override
+	public JSONObject select( String query ) throws Exception {
+		return mDataStore.select( query );
+	}
+
+	@Override
+	public JSONObject selectOne( String query ) throws Exception {
+		return mDataStore.selectOne( query );
+	}
+
+	@Override
 	public void begin() {
 		mDataStore.begin();
 	}
@@ -172,4 +192,19 @@ public final class Dao implements DataStore {
 		mDataStore.end();
 	}
 
+
+
+	public interface InsideLock {
+		void execute() throws Exception;
+	}
+
+	@Override
+	public void doInLock( InsideLock cmd ) throws Exception {
+		begin();
+		try {
+			cmd.execute();
+		} finally {
+			end();
+		}
+	}
 }

@@ -121,6 +121,14 @@ public class HttpResponse {
 		return this.statusIdentifier;
 	}
 
+	public String setStatusCode( HttpException e ) {
+		return setStatusCode( e.getStatusCode(), e );
+	}
+
+	public String setStatusCode( Exception e ) {
+		return setStatusCode( HttpStatusCode.ERR_INTERNAL, e );
+	}
+
 	public HttpStatusCode getStatusCode() {
 		return this.mCode;
 	}

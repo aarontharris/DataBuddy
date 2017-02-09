@@ -8,7 +8,7 @@ import com.leap12.common.props.PropsRead.FieldException;
 import com.leap12.databuddy.BaseConnectionDelegate;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.CmdResponse.CmdResponseMutable;
-import com.leap12.databuddy.data.ContextShardKey;
+import com.leap12.databuddy.data.SimpleShardKey;
 import com.leap12.databuddy.data.DataStore;
 import com.leap12.databuddy.data.ShardKey;
 
@@ -22,7 +22,7 @@ public abstract class HttpContextualCmd extends HttpCmd {
 		CmdResponseMutable<HttpResponse> out = new CmdResponseMutable<>( HttpResponse.class );
 		try {
 			String username = input.getQueryParam( "context" );
-			ShardKey shardKey = new ContextShardKey( username );
+			ShardKey shardKey = new SimpleShardKey( username );
 			DataStore db = connection.getDb( shardKey );
 
 			exec( connection, input, resp, db );

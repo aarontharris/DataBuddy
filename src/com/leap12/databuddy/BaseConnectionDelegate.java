@@ -11,7 +11,7 @@ import com.leap12.common.Pair;
 import com.leap12.common.StrUtl;
 import com.leap12.databuddy.Commands.CmdResponse;
 import com.leap12.databuddy.Commands.ResponseStatus;
-import com.leap12.databuddy.data.Dao;
+import com.leap12.databuddy.data.BaseDao;
 import com.leap12.databuddy.data.DataStore;
 import com.leap12.databuddy.data.ShardKey;
 
@@ -28,14 +28,14 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 	 * Only available while this delegate is attached to the ClientConnection
 	 */
 	public DataStore getDbDefault() throws Exception {
-		return Dao.getInstance( this, null );
+		return BaseDao.getInstance( this, null );
 	}
 
 	/**
 	 * Only available while this delegate is attached to the ClientConnection
 	 */
 	public DataStore getDb( ShardKey shardKey ) throws Exception {
-		return Dao.getInstance( this, shardKey );
+		return BaseDao.getInstance( this, shardKey );
 	}
 
 	public final void writeResponse( CmdResponse<?> response ) {
@@ -152,7 +152,7 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 	@Override
 	protected final void doDetatched() throws Exception {
 		super.doDetatched();
-		Dao.releaseInstance( this );
+		BaseDao.releaseInstance( this );
 	}
 
 	@Override
