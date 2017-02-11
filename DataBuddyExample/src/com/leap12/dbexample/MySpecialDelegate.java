@@ -7,8 +7,6 @@ import com.leap12.common.http.annot.HttpGet;
 import com.leap12.common.http.annot.HttpPost;
 import com.leap12.common.props.PropsRead;
 import com.leap12.databuddy.aspects.DefaultHandshakeDelegate;
-import com.leap12.databuddy.data.DataStore;
-import com.leap12.databuddy.data.TopicShardKey;
 
 public class MySpecialDelegate extends DefaultHandshakeDelegate {
 
@@ -34,7 +32,7 @@ public class MySpecialDelegate extends DefaultHandshakeDelegate {
 			        params.getString( "query" )
 			        );
 
-			DataStore db = getDb( animalsKey );
+			// DataStore db = getDb( animalsKey );
 
 			response.appendBody( "WOOT" );
 		} catch ( Exception e ) {

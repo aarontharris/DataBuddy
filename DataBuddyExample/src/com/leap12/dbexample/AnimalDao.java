@@ -3,19 +3,18 @@ package com.leap12.dbexample;
 import org.json.JSONObject;
 
 import com.leap12.common.Log;
-import com.leap12.databuddy.data.BaseDao;
 import com.leap12.databuddy.data.DataStore;
-import com.leap12.databuddy.data.ShardKey;
-import com.leap12.databuddy.data.TopicShardKey;
+import com.leap12.databuddy.sqlite.SqliteDataStoreManager;
+import com.leap12.databuddy.sqlite.SqliteShardKey;
 
 public class AnimalDao implements Dao {
 
-	private final ShardKey animalKey = new TopicShardKey( "animals" );
-	private DataStore db;
+	private final SqliteShardKey animalKey = new TopicShardKey( "animals" );
+	private DataStore dataStore;
 
 	public AnimalDao() {
 		try {
-			db = BaseDao.getInstance( this, animalKey );
+			dataStore = SqliteDataStoreManager.get().attainDataStore( animalKey, 1000 );
 		} catch ( Exception e ) {
 			throw new IllegalStateException( e );
 		}
@@ -23,8 +22,7 @@ public class AnimalDao implements Dao {
 
 	@Override
 	public void ensureTables() throws Exception {
-		db.begin();
-		try {
+		dataStore.readWrite( ( db ) -> {
 			String table = null;
 			if ( ( null != ( table = "animal" ) ) && db.ensureTable( table, toAnimalTable( table ) ) ) {
 				Log.d( "Created %s", table );
@@ -32,13 +30,11 @@ public class AnimalDao implements Dao {
 			if ( ( null != ( table = "animal_facts" ) ) && db.ensureTable( table, toAnimalFactsTable( table ) ) ) {
 				Log.d( "Created %s", table );
 			}
+			return null;
+		} );
 
-			// for ( int i = 0; i < 10; i++ ) {
-			// test();
-			// }
-		} finally {
-			db.end();
-		}
+		test1();
+		// for ( int i = 0; i < 10; i++ ) { test(); }
 	}
 
 	private static final String toAnimalTable( String table ) {
@@ -54,8 +50,10 @@ public class AnimalDao implements Dao {
 	private static final String toAnimalInsert( Animal animal ) {
 		String sql = ""
 		        + "INSERT INTO animal"
-		        + "( %s, '%s' )";
-		return String.format( sql, animal );
+		        + "( name )"
+		        + " VALUES "
+		        + "( '%s' )";
+		return String.format( sql, animal.name );
 	}
 
 	private static final String toAnimalFactsTable( String table ) {
@@ -96,18 +94,25 @@ public class AnimalDao implements Dao {
 		}
 	}
 
-	public void test() throws Exception {
+	public void test1() throws Exception {
+		Animal animal = new Animal( "dog" );
+		writeAnimal( animal );
+		Log.d( "Animal: %s %s", animal.id, animal.name );
+	}
+
+	public void test2() throws Exception {
 		new Thread( ( ) -> {
 			try {
 				for ( int i = 0; i < 1000; i++ ) {
 					final int idx = i;
 					String name = String.format( "%s.%s.%s", Thread.currentThread().getId(), System.currentTimeMillis(), idx );
-					db.doInLock( ( ) -> {
-						db.update( String.format( "insert into animal ( name ) values ( '%s' )", name ) );
+					dataStore.readWrite( ( db ) -> {
+						db.update( String.format( "insert into animal ( name ) values ( '%s' )", name ), null );
 						JSONObject object = db.selectOne( "select * from animal where id in ( select max(id) from animal )" );
 						if ( !name.equals( object.getString( "name" ) ) ) {
 							Log.e( "MISMATCH %s - expected %s got %s", idx, name, object.getString( "name" ) );
 						}
+						return null;
 					} );
 				}
 				Log.d( "Finish" );
@@ -118,12 +123,17 @@ public class AnimalDao implements Dao {
 	}
 
 	public void writeAnimal( Animal animal ) throws Exception {
-		db.begin();
-		try {
-			// db.update(
-		} finally {
-			db.end();
+		JSONObject json = dataStore.read( db -> db.selectOne( String.format( "select * from animal where name='%s'", animal.name ) ) );
+		if ( json == null ) {
+			json = dataStore.readWrite( db -> db.insertAndSelect( "animal", "id", toAnimalInsert( animal ) ) );
+		} else {
+			final int id = json.getInt( "id" );
+			dataStore.readWrite( db -> {
+				db.update( "update animal set name='%s' where id=%s", animal.name, id );
+				return null;
+			} );
 		}
+		animal.id = json.getInt( "id" );
 	}
 
 

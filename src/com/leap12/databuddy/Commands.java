@@ -8,11 +8,6 @@ import com.leap12.common.props.Props;
 import com.leap12.common.props.PropsRead;
 import com.leap12.common.props.PropsReadWrite;
 import com.leap12.common.props.PropsWrite;
-import com.leap12.databuddy.commands.http.HttpAddCmd;
-import com.leap12.databuddy.commands.http.HttpEchoCmd;
-import com.leap12.databuddy.commands.http.HttpListCmd;
-import com.leap12.databuddy.commands.http.HttpReadCmd;
-import com.leap12.databuddy.commands.http.HttpSaveCmd;
 import com.leap12.databuddy.ex.DBCmdException;
 
 public final class Commands {
@@ -278,12 +273,6 @@ public final class Commands {
 		}
 
 	}
-
-	public static final HttpEchoCmd CMD_HTTP_ECHO = new HttpEchoCmd();
-	public static final HttpSaveCmd CMD_HTTP_SAVE = new HttpSaveCmd();
-	public static final HttpReadCmd CMD_HTTP_READ = new HttpReadCmd();
-	public static final HttpAddCmd CMD_HTTP_ADD = new HttpAddCmd();
-	public static final HttpListCmd CMD_HTTP_LIST = new HttpListCmd();
 
 	private static final Commands self = new Commands();
 

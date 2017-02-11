@@ -9,11 +9,6 @@ import com.leap12.common.ConnectionDelegate;
 import com.leap12.common.Log;
 import com.leap12.common.Pair;
 import com.leap12.common.StrUtl;
-import com.leap12.databuddy.Commands.CmdResponse;
-import com.leap12.databuddy.Commands.ResponseStatus;
-import com.leap12.databuddy.data.BaseDao;
-import com.leap12.databuddy.data.DataStore;
-import com.leap12.databuddy.data.ShardKey;
 
 public class BaseConnectionDelegate extends ConnectionDelegate {
 
@@ -22,70 +17,6 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 		super.onAttached( connection );
 		connection.setInactivityTimeout( 10000 );
 		connection.setKeepAlive( false ); // we don't know the client protocol yet, lets assume close when done unless told otherwise
-	}
-
-	/**
-	 * Only available while this delegate is attached to the ClientConnection
-	 */
-	public DataStore getDbDefault() throws Exception {
-		return BaseDao.getInstance( this, null );
-	}
-
-	/**
-	 * Only available while this delegate is attached to the ClientConnection
-	 */
-	public DataStore getDb( ShardKey shardKey ) throws Exception {
-		return BaseDao.getInstance( this, shardKey );
-	}
-
-	public final void writeResponse( CmdResponse<?> response ) {
-		try {
-			if ( response != null ) {
-				ResponseStatus status = response.getStatus();
-				if ( status == null ) {
-					throw new NullPointerException( "Status is null" );
-				}
-
-				String value;
-				int statusCode = response.getStatus().getCode();
-
-				if ( response != null ) {
-					switch ( response.getStatus() ) {
-					case SUCCESS:
-						if ( Void.class.equals( response.getType() ) ) {
-							writeLnMsgSafe( "OK" );
-						} else {
-							value = response.getValue() == null ? null : String.valueOf( response.getValue() );
-							writeResponseWithStatus( value, statusCode, response.getType().getSimpleName() );
-						}
-						break;
-					default:
-						value = response.getStatusMessage();
-						if ( value == null ) {
-							value = response.getError().getMessage();
-						}
-						writeResponseWithStatus( value, statusCode, String.class.getSimpleName() );
-						break;
-					}
-				}
-			} else {
-				Log.e( new NullPointerException( "Response was null" ) );
-			}
-		} catch ( Exception e ) {
-			Log.e( e ); // if a failure occurs mid-write, the client will know it didn't receive the full payload and re-request.
-		}
-	}
-
-	public final void writeErrorResponse( String errMsg, Exception err ) {
-		try {
-			String msg = errMsg;
-			if ( msg == null ) {
-				msg = err.getMessage();
-			}
-			writeResponseWithStatus( msg, Commands.toResponseStatus( err ).getCode(), String.class.getSimpleName() );
-		} catch ( Exception e ) {
-			Log.e( e );
-		}
 	}
 
 	protected Map<String, String> getCmdBeginMap( String msg ) throws Exception {
@@ -152,7 +83,6 @@ public class BaseConnectionDelegate extends ConnectionDelegate {
 	@Override
 	protected final void doDetatched() throws Exception {
 		super.doDetatched();
-		BaseDao.releaseInstance( this );
 	}
 
 	@Override

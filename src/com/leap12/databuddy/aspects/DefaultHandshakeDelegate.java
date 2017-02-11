@@ -1,7 +1,6 @@
 package com.leap12.databuddy.aspects;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,10 +21,6 @@ import com.leap12.common.http.err.HttpExceptionNotImplemented;
 import com.leap12.common.props.PropsRead;
 import com.leap12.common.props.PropsReadWrite;
 import com.leap12.databuddy.BaseConnectionDelegate;
-import com.leap12.databuddy.Commands;
-import com.leap12.databuddy.Commands.CmdResponse;
-import com.leap12.databuddy.commands.http.HttpCmd;
-import com.leap12.databuddy.commands.http.HttpCmdFactory;
 
 /**
  * The default launchpad connection. It serves as the Connection "Factory", routing a client to the appropriate connection based on how they connect.
@@ -167,39 +162,6 @@ public class DefaultHandshakeDelegate extends BaseConnectionDelegate {
 		}
 
 		return response;
-	}
-
-	protected void xxhandleHttpRequest( HttpRequest request ) throws Exception {
-		// Log.d( request.describe() );
-
-		List<HttpCmd> commands = new ArrayList<>();
-		commands.add( Commands.CMD_HTTP_SAVE );
-		commands.add( Commands.CMD_HTTP_READ );
-		commands.add( Commands.CMD_HTTP_ECHO );
-		commands.add( Commands.CMD_HTTP_ADD );
-		commands.add( Commands.CMD_HTTP_LIST );
-
-		Iterable<HttpCmd> bestFirst = new HttpCmdFactory( commands ).bestFirst( request );
-		for ( HttpCmd httpCmd : bestFirst ) {
-			CmdResponse<HttpResponse> cmdResp = httpCmd.executeCommand( this, request );
-
-			// bounce out if cmd failed
-			if ( cmdResp.getError() != null ) {
-				throw cmdResp.getError();
-			} else if ( cmdResp.getStatus().isFailure() ) {
-				throw new Exception( "Unrecognized Internal Error" );
-			}
-
-			// If unfulfilled, then it was obviously a cmd mismatch, let the next best handle it.
-			if ( cmdResp.getStatus().isUnFulfilled() ) {
-				continue;
-			}
-
-			// We've ruled out the bad, so the response must be usable, use it
-			HttpResponse resp = cmdResp.getValue();
-			writeMsg( resp.toString() );
-			break;
-		}
 	}
 
 }
