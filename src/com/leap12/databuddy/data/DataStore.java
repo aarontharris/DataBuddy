@@ -2,13 +2,15 @@ package com.leap12.databuddy.data;
 
 import org.json.JSONObject;
 
+import com.leap12.common.NonNull;
+
 public interface DataStore {
 
 	public interface ReadDataStore {
 
-		JSONObject selectMany( String query ) throws Exception;
+		JSONObject selectMany( @NonNull SqlRequest req ) throws Exception;
 
-		JSONObject selectOne( String query ) throws Exception;
+		JSONObject selectOne( @NonNull SqlRequest req ) throws Exception;
 
 	}
 
@@ -16,11 +18,11 @@ public interface DataStore {
 
 	public interface ReadWriteDataStore extends ReadDataStore {
 
-		boolean ensureTable( String table, String query ) throws Exception;
+		boolean ensureTable( @NonNull String table, @NonNull String query ) throws Exception;
 
-		void update( String queryFormat , Object... args  ) throws Exception;
+		void update( @NonNull SqlRequest req ) throws Exception;
 
-		JSONObject insertAndSelect( String table, String pkey, String insertQuery ) throws Exception;
+		JSONObject insertAndSelect( @NonNull String table, @NonNull String pkey, @NonNull SqlRequest req ) throws Exception;
 
 	}
 

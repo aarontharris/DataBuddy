@@ -11,7 +11,7 @@ public class Example {
 	private static Collection<Class<? extends Dao>> daoClasses = new HashSet<>();
 
 	private static void initializeDaos() throws Exception {
-		daoClasses.add( AnimalDao.class );
+		daoClasses.add( UserDao.class );
 
 		for ( Class<? extends Dao> daoClass : daoClasses ) {
 			Log.d( "ensuring %s", daoClass.getSimpleName() );

@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import com.leap12.common.Coercer;
 import com.leap12.common.Log;
 import com.leap12.databuddy.data.ResultSetJSonAdapter;
+import com.leap12.databuddy.data.SqlRequest;
 import com.leap12.databuddy.data.var.Type;
 import com.leap12.databuddy.data.var.VarType;
 
@@ -263,7 +264,7 @@ public class SqliteDataStoreSimple extends SqliteDataStore {
 	private void insertOrReplace( String table, String key, String value ) throws Exception {
 		ensureTable( table );
 		String query = toQueryInsertOrReplace( table, key, Type.StringValue, value, null, 0, 0f );
-		update( query, null );
+		update( new SqlRequest( query ) );
 	}
 
 	private void insertOrReplace( String table, Type type, String key,
@@ -279,12 +280,12 @@ public class SqliteDataStoreSimple extends SqliteDataStore {
 		stmt.setInt( 5, intVal );
 		stmt.setFloat( 6, floatVal );
 		stmt.executeUpdate( query );
-		update( query, null );
+		update( new SqlRequest( query ) );
 	}
 
 	private void delete( String table, String key ) throws Exception {
 		String query = toQueryDelete( table, key );
-		update( query, null );
+		update( new SqlRequest( query ) );
 	}
 
 	// I realize dynamic table naming sounds dangerous but I have confirmed that there is no limit to the number of tables in SQLite (other than physical storage
