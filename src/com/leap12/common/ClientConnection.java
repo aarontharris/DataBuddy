@@ -10,13 +10,19 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.leap12.databuddy.DataBuddy;
+
 public class ClientConnection {
 	private static ConnectionDelegate DEFAULT_DELEGATE = new ConnectionDelegate();
 
 	public static long count = 0;
 	public static long millis = 0;
 	public static long longest = 0;
-	public static long shortest = 100;
+	public static long shortest = -1;
+	public static long dMillis = 0;
+	public static long dLongest = 0;
+	public static long wMillis = 0;
+	public static long wLongest = 0;
 
 	private final Socket socket;
 	private ConnectionDelegate delegate;
@@ -25,7 +31,7 @@ public class ClientConnection {
 	private String mLineSeparator;
 	private boolean keepAlive = false;
 	private int mInactivityTimeoutMillis = 0;
-	private int mInactivityPollIntervalMillis = 500;
+	private int mInactivityPollIntervalMillis = 250;
 	private BufferedInputStream bIn;
 	private long startTime = 0L;
 
@@ -203,6 +209,10 @@ public class ClientConnection {
 			@Override
 			public void run() {
 				Log.d( "New Connection on Port %s", socket.getPort() );
+				DataBuddy.get().associateThisThreadToPort( socket.getPort() );
+				long waitedForInput = 0;
+				long processMessageTime = 0;
+
 				try {
 					if ( isConnected() ) {
 						doConnectionOpened();
@@ -224,7 +234,9 @@ public class ClientConnection {
 							try {
 								int totalBytesRead = 0;
 
+								long startHandleInactivity = System.currentTimeMillis();
 								handleInactivity( bIn );
+								waitedForInput = System.currentTimeMillis() - startHandleInactivity;
 
 								boolean more = true;
 								int bytesRead = 0;
@@ -255,7 +267,10 @@ public class ClientConnection {
 
 								if ( totalBytesRead > 0 ) {
 									String msg = StrUtl.toString( inputBuffer, 0, totalBytesRead );
+
+									long startProcessMessage = System.currentTimeMillis();
 									processMessage( msg, inputBuffer, totalBytesRead );
+									processMessageTime = System.currentTimeMillis() - startProcessMessage;
 
 									// Trim Down ?
 									// We assume the previous bulk-up was an outlier case so we'll want to trim down to save memory.
@@ -296,22 +311,36 @@ public class ClientConnection {
 
 				count += 1;
 				millis += delta;
+				dMillis += processMessageTime;
+				wMillis += waitedForInput;
 
-				if ( delta < shortest ) {
+				if ( delta < shortest || shortest == -1 ) {
 					shortest = delta;
 				}
 				if ( delta > longest ) {
 					longest = delta;
 				}
+				if ( processMessageTime > dLongest ) {
+					dLongest = processMessageTime;
+				}
+				if ( waitedForInput > wLongest ) {
+					wLongest = waitedForInput;
+				}
 
 				float avg = (float) millis / (float) count;
+				float davg = (float) dMillis / (float) count;
+				float wavg = (float) wMillis / (float) count;
 
-				Log.d( "This: %s, Avg: %s, Shortest: %s, Longest: %s", delta, avg, shortest, longest );
+				Log.d( "This: %s (w=%s|%s|%s,p=%s|%s|%s), Avg: %s, Short: %s, Long: %s", delta,
+				        waitedForInput, wavg, wLongest,
+				        processMessageTime, davg, dLongest,
+				        avg, shortest, longest );
 			}
 		} ).start();
 	}
 
 	private void handleInactivity( InputStream in ) throws Exception {
+		long sleepTime = 1;
 		long timeout = getInactivityTimeout();
 		if ( timeout > 0 ) {
 			long start = System.currentTimeMillis();
@@ -321,7 +350,13 @@ public class ClientConnection {
 				if ( delta > timeout ) {
 					ClientConnection.this.stop();
 				}
-				Thread.sleep( getInactivityPollInterval() );
+
+				Thread.sleep( sleepTime );
+
+				sleepTime *= 2;
+				if ( sleepTime > getInactivityPollInterval() ) {
+					sleepTime = getInactivityPollInterval();
+				}
 			}
 		}
 	}

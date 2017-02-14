@@ -1,5 +1,7 @@
 package com.leap12.common.props;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import com.leap12.common.Log;
@@ -78,12 +80,12 @@ public interface PropsRead {
 	 * Functional Interface (Lambda) allowing the developer fine control of the conditional output.<br>
 	 * Intended to provide a hook when searching for a value associated with a key and dealing with the result.<br>
 	 */
-	public interface Converter<T> {
+	public interface PropsConverter<T> {
 		/**
 		 * @param key the key associated with the desired value
 		 * @param found true = key was found
 		 * @param err most likely a parse error but could be any error that occurred in the search->tranform->convert process.
-		 * @param post {@link Transformer} value found for the key, or null if key not found (could be null even if key was found).
+		 * @param post {@link PropsTransformer} value found for the key, or null if key not found (could be null even if key was found).
 		 */
 		T convert( String key, boolean found, Exception err, T in ) throws Exception;
 	}
@@ -97,7 +99,7 @@ public interface PropsRead {
 	 * @param <F> type from
 	 * @param <T> type to
 	 */
-	public interface Transformer<F, T> {
+	public interface PropsTransformer<F, T> {
 		/**
 		 * @param key the key associated with the desired value
 		 * @param found true = key was found
@@ -105,6 +107,15 @@ public interface PropsRead {
 		 * @param the pre-transform value found for the key, or null if key not found (could be null even if key was found).
 		 */
 		T transform( String key, boolean found, Exception err, F in );
+	}
+
+
+	default Map<String, String> toMap() {
+		Map<String, String> out = new HashMap<>();
+		for ( String key : keySet() ) {
+			out.put( key, getString( key ) );
+		}
+		return out;
 	}
 
 	public boolean containsKey( String key );
@@ -135,12 +146,12 @@ public interface PropsRead {
 	 * @param key the key associated with the desired value
 	 * @param transform your opportunity to define the String -> T transformation (parsing).
 	 * @param convert your opportunity to inspect the post-transform result and change the returned value.
-	 * @see Transformer
-	 * @see Converter
+	 * @see PropsTransformer
+	 * @see PropsConverter
 	 * @throws TransformException if an error occurred during transform.
 	 * @throws ConvertException if an error occurred during conversion.
 	 */
-	default <T> T getValue( String key, Transformer<String, T> transform, Converter<T> convert ) {
+	default <T> T getValue( String key, PropsTransformer<String, T> transform, PropsConverter<T> convert ) {
 		T out = null;
 		boolean found = false;
 		Exception exception = null;
@@ -196,14 +207,14 @@ public interface PropsRead {
 	 * 
 	 * @param key Key used to search for a value
 	 * @param convert convert the output
-	 * @see Converter
+	 * @see PropsConverter
 	 * @return
 	 */
-	default String getString( String key, Converter<String> convert ) {
+	default String getString( String key, PropsConverter<String> convert ) {
 		return getValue( key, ( k, f, e, n ) -> n, convert );
 	}
 
-	/** See {@link #getString(String, Converter)} for usage */
+	/** See {@link #getString(String, PropsConverter)} for usage */
 	default String getString( String key, final String defVal ) {
 		return getString( key, ( k, f, e, n ) -> f ? n : defVal );
 	}
@@ -230,8 +241,8 @@ public interface PropsRead {
 		} );
 	}
 
-	/** See {@link #getString(String, Converter)} for usage */
-	default Boolean getBoolean( String key, Converter<Boolean> convert ) {
+	/** See {@link #getString(String, PropsConverter)} for usage */
+	default Boolean getBoolean( String key, PropsConverter<Boolean> convert ) {
 		return getValue( key, ( k, f, e, n ) -> Boolean.valueOf( n ), convert );
 	}
 
@@ -261,19 +272,19 @@ public interface PropsRead {
 		} );
 	}
 
-	/** See {@link #getString(String, Converter)} for usage */
-	default Integer getInteger( String key, Converter<Integer> convert ) {
+	/** See {@link #getString(String, PropsConverter)} for usage */
+	default Integer getIntegerConvert( String key, PropsConverter<Integer> convert ) {
 		return getValue( key, ( k, f, e, n ) -> Integer.valueOf( n ), convert );
 	}
 
 	/** @param defVal returned when key is not present or parse error as invalid data is considered not present. */
-	default Integer getInteger( final String key, final int defVal ) {
-		return getInteger( key, ( k, f, e, n ) -> f ? n : defVal );
+	default Integer getInteger( final String key, final Integer defVal ) {
+		return getIntegerConvert( key, ( k, f, e, n ) -> f ? n : defVal );
 	}
 
 	/** @param defVal returned when key is not present, errors are thrown. */
-	default Integer getIntegerChecked( final String key, final int defVal ) throws ConvertException, TransformException, Exception {
-		return getInteger( key, ( k, f, e, n ) -> {
+	default Integer getIntegerChecked( final String key, final Integer defVal ) throws ConvertException, TransformException, Exception {
+		return getIntegerConvert( key, ( k, f, e, n ) -> {
 			if ( e != null ) {
 				throw e;
 			} else
@@ -283,7 +294,7 @@ public interface PropsRead {
 
 	/** @param error thrown when key is not present in addition to transform or conversion errors */
 	default Integer getIntegerRequired( final String key ) throws ConvertException, TransformException, MissingFieldException {
-		return getInteger( key, ( k, f, e, n ) -> {
+		return getIntegerConvert( key, ( k, f, e, n ) -> {
 			if ( e != null ) {
 				throw e;
 			} else if ( !f )
@@ -292,8 +303,8 @@ public interface PropsRead {
 		} );
 	}
 
-	/** See {@link #getString(String, Converter)} for usage */
-	default Long getLong( String key, Converter<Long> convert ) {
+	/** See {@link #getString(String, PropsConverter)} for usage */
+	default Long getLong( String key, PropsConverter<Long> convert ) {
 		return getValue( key, ( k, f, e, n ) -> Long.valueOf( n ), convert );
 	}
 
@@ -323,8 +334,8 @@ public interface PropsRead {
 		} );
 	}
 
-	/** See {@link #getString(String, Converter)} for usage */
-	default Float getFloat( String key, Converter<Float> convert ) {
+	/** See {@link #getString(String, PropsConverter)} for usage */
+	default Float getFloat( String key, PropsConverter<Float> convert ) {
 		return getValue( key, ( k, f, e, n ) -> Float.valueOf( n ), convert );
 	}
 
@@ -354,8 +365,8 @@ public interface PropsRead {
 		} );
 	}
 
-	/** See {@link #getString(String, Converter)} for usage */
-	default Double getDouble( String key, Converter<Double> convert ) {
+	/** See {@link #getString(String, PropsConverter)} for usage */
+	default Double getDouble( String key, PropsConverter<Double> convert ) {
 		return getValue( key, ( k, f, e, n ) -> Double.valueOf( n ), convert );
 	}
 

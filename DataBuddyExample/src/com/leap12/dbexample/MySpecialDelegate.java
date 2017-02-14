@@ -1,47 +1,42 @@
 package com.leap12.dbexample;
 
-import com.leap12.common.ClientConnection;
-import com.leap12.common.HttpRequest;
 import com.leap12.common.Log;
-import com.leap12.databuddy.BaseConnectionDelegate;
+import com.leap12.common.http.HttpRequest;
+import com.leap12.common.http.HttpResponse;
+import com.leap12.common.http.annot.HttpGet;
+import com.leap12.common.http.annot.HttpPost;
+import com.leap12.common.props.PropsRead;
+import com.leap12.databuddy.aspects.DefaultHandshakeDelegate;
 
-public class MySpecialDelegate extends BaseConnectionDelegate {
+public class MySpecialDelegate extends DefaultHandshakeDelegate {
 
-	/**
-	 * This connection only gets called if this connection was active
-	 */
-	@Override
-	protected void onConnectionOpened() throws Exception {
-		super.onConnectionOpened();
+	private final TopicShardKey statesKey = new TopicShardKey( "states" ); // FIXME: should probably put these in a Dao
+	private final TopicShardKey animalsKey = new TopicShardKey( "animals" );
+
+	@HttpGet( "/test/{str$name}/and/{Str$attr}/search?query={Str$query}" )
+	private void onTestGet( HttpRequest request, HttpResponse response, PropsRead params ) {
+		Log.d( "Received Request matching onTestGet %s, %s, %s",
+		        params.getString( "name" ),
+		        params.getString( "attr" ),
+		        params.getString( "query" )
+		        );
+		response.appendBody( "WOOT" );
 	}
 
-	@Override
-	protected void onAttached( ClientConnection connection ) throws Exception {
-		connection.setInactivityTimeout( 10000 );
-		connection.setKeepAlive( false ); // we don't know the client protocol
-											// yet, could be HTTP or GAME
-	}
+	@HttpPost( "/test/{str$name}/and/{Str$attr}/search?query={Str$query}" )
+	private void onTestPost( HttpRequest request, HttpResponse response, PropsRead params ) {
+		try {
+			Log.d( "Received Request matching onTestPost %s, %s, %s",
+			        params.getString( "name" ),
+			        params.getString( "attr" ),
+			        params.getString( "query" )
+			        );
 
-	@Override
-	protected void onReceivedMsg( String msg ) throws Exception {
-		Log.debugNewlineChars( msg ); // log the incoming request for fun
+			// DataStore db = getDb( animalsKey );
 
-		if ( HttpRequest.isPotentiallyHttpRequest( msg ) ) { // not guaranteed but pretty likely
-			HttpRequest req = new HttpRequest( msg );
-			if ( req.isValid() ) {
-				getClientConnection().setKeepAlive( false );
-
-				writeMsg( "" + "<html>" + "<body>"
-						+ "<b>Boo... I'm a webserver...</b>" + "</body>"
-						+ "</html>\r\n\r\n" );
-
-				// Now die because we don't want to keep a http connection open
-			}
-		} else {
-			writeMsg( "I am a telnet bot...beep bop boop beep." );
-			MyTelnetDelegate delegate = new MyTelnetDelegate();
-			getClientConnection().setDelegate( delegate ); // hand control over to the new delegate
+			response.appendBody( "WOOT" );
+		} catch ( Exception e ) {
+			response.setStatusCode( e );
 		}
 	}
-
 }

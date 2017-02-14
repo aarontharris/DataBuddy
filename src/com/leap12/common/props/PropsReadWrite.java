@@ -26,8 +26,10 @@ public class PropsReadWrite implements PropsRead, PropsWrite {
 	@Override
 	public void putAll( JSONObject json ) {
 		synchronized ( properties ) {
-			for ( String key : json.keySet() ) {
-				properties.put( key, String.valueOf( json.get( key ) ) );
+			if ( json != null ) {
+				for ( String key : json.keySet() ) {
+					properties.put( key, String.valueOf( json.get( key ) ) );
+				}
 			}
 		}
 	}

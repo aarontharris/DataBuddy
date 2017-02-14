@@ -17,7 +17,7 @@ public class ConnectionDelegate {
 	 * @throws Exception
 	 */
 	protected void onAttached( ClientConnection connection ) throws Exception {
-		// Log.d(getClass().getName() + " onAttached");
+		Log.d( getClass().getName() + " onAttached" );
 	}
 
 	protected void doConnectionOpened() throws Exception {
@@ -28,7 +28,7 @@ public class ConnectionDelegate {
 	 * Only called if this is the delegate that opened the socket
 	 */
 	protected void onConnectionOpened() throws Exception {
-		// Log.d(getClass().getName() + " onConnectionOpened");
+		Log.d( getClass().getName() + " onConnectionOpened" );
 	}
 
 	protected void doReceivedMsg( String msg ) throws Exception {
@@ -39,7 +39,7 @@ public class ConnectionDelegate {
 	 * Always called when a non-emptpy non-quit msg is received from the client
 	 */
 	protected void onReceivedMsg( String msg ) throws Exception {
-		// Log.d(getClass().getName() + " onReceivedMsg( %s )", msg);
+		Log.d( getClass().getName() + " onReceivedMsg( length: %s )", msg.length() );
 	}
 
 	protected void doReceivedQuit() throws Exception {
@@ -50,7 +50,7 @@ public class ConnectionDelegate {
 	 * Only called if this is the delegate that received the quit msg
 	 */
 	protected void onReceivedQuit() throws Exception {
-		// Log.d(getClass().getName() + " onReceivedQuit");
+		Log.d( getClass().getName() + " onReceivedQuit" );
 	}
 
 	protected void doDetatched() throws Exception {
@@ -62,7 +62,13 @@ public class ConnectionDelegate {
 	 * Always called before the delegate is fully detached and destroyed
 	 */
 	protected void onDetatched() throws Exception {
-		// Log.d(getClass().getName() + " onDetached");
+		Log.d( getClass().getName() + " onDetached" );
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		Log.d( getClass().getName() + " finalize" );
 	}
 
 	/** Will return null if the Delegate has been detatched */

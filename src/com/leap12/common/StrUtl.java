@@ -2,6 +2,7 @@ package com.leap12.common;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +13,9 @@ import java.util.Map;
 import com.leap12.common.props.PropsWrite;
 
 public class StrUtl {
+	public static final String charEncoding = "UTF-8";
+	public static final Charset CHARSET_UTF8 = Charset.forName( charEncoding );
+
 	public static final String EMPTY = "";
 
 	public static boolean isNotEmpty( String string ) {
@@ -170,11 +174,18 @@ public class StrUtl {
 		if ( records.length > 0 ) {
 			Map<String, String> tmp = new HashMap<>();
 			for ( String record : records ) {
-				String[] parts = record.split( pairDelim );
-				if ( parts.length != 2 ) {
-					throw new IllegalStateException( "Expected pairs but got an odd number" );
+				String[] parts = record.split( pairDelim, 2 );
+				String key = null;
+				String value = null;
+				if ( parts.length == 0 ) {
+					key = record;
+				} else if ( parts.length == 1 ) {
+					key = parts[0];
+				} else if ( parts.length == 2 ) {
+					key = parts[0];
+					value = parts[1];
 				}
-				tmp.put( parts[0], parts[1] );
+				tmp.put( key, value );
 			}
 			out = tmp;
 		}
