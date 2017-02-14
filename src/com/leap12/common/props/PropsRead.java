@@ -1,5 +1,7 @@
 package com.leap12.common.props;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import com.leap12.common.Log;
@@ -105,6 +107,15 @@ public interface PropsRead {
 		 * @param the pre-transform value found for the key, or null if key not found (could be null even if key was found).
 		 */
 		T transform( String key, boolean found, Exception err, F in );
+	}
+
+
+	default Map<String, String> toMap() {
+		Map<String, String> out = new HashMap<>();
+		for ( String key : keySet() ) {
+			out.put( key, getString( key ) );
+		}
+		return out;
 	}
 
 	public boolean containsKey( String key );

@@ -2,15 +2,21 @@ package com.leap12.databuddy.data;
 
 
 public class ShardKey {
+	private final Class<? extends DataStore> dataStoreClass;
 	private final String shardString;
 
-	protected ShardKey( String shard ) {
+	protected ShardKey( String shard, Class<? extends DataStore> dataStoreClass ) {
 		this.shardString = shard;
+		this.dataStoreClass = dataStoreClass;
 	}
 
 	@Override
 	public String toString() {
 		return shardString;
+	}
+
+	public Class<? extends DataStore> getDataStoreClass() {
+		return dataStoreClass;
 	}
 
 	@Override

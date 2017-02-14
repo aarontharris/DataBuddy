@@ -174,11 +174,18 @@ public class StrUtl {
 		if ( records.length > 0 ) {
 			Map<String, String> tmp = new HashMap<>();
 			for ( String record : records ) {
-				String[] parts = record.split( pairDelim );
-				if ( parts.length != 2 ) {
-					throw new IllegalStateException( "Expected pairs but got an odd number" );
+				String[] parts = record.split( pairDelim, 2 );
+				String key = null;
+				String value = null;
+				if ( parts.length == 0 ) {
+					key = record;
+				} else if ( parts.length == 1 ) {
+					key = parts[0];
+				} else if ( parts.length == 2 ) {
+					key = parts[0];
+					value = parts[1];
 				}
-				tmp.put( parts[0], parts[1] );
+				tmp.put( key, value );
 			}
 			out = tmp;
 		}

@@ -10,6 +10,8 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.leap12.databuddy.DataBuddy;
+
 public class ClientConnection {
 	private static ConnectionDelegate DEFAULT_DELEGATE = new ConnectionDelegate();
 
@@ -207,6 +209,7 @@ public class ClientConnection {
 			@Override
 			public void run() {
 				Log.d( "New Connection on Port %s", socket.getPort() );
+				DataBuddy.get().associateThisThreadToPort( socket.getPort() );
 				long waitedForInput = 0;
 				long processMessageTime = 0;
 

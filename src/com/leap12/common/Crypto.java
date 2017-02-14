@@ -30,7 +30,7 @@ public class Crypto {
 	 * - - Read in at compile-time from a config file so not to include the shared-salt in the code.
 	 * - - Why not just include the key with the code?  because then everyone would have the same key
 	 * - - and if someone discovered their key, then they'd know everyone's key and they'd know this by looking at the code.
-	 * - - compile-time salt from a config file makes the code sharable and when encrypted with user and pass, makes them each unique.
+	 * - - run-time salt from a config file makes the code sharable and when encrypted with user and pass, makes them each unique.
 	 * - The user enters username and password
 	 * - The client generates a pass-hash from the password and shared-salt
 	 * - The client generates a symmetric-key deterministic from the username + pass-hash + shared-salt
@@ -46,17 +46,26 @@ public class Crypto {
 	 * </pre>
 	 */
 
+	private static String DEFAULT_CHARSET = "UTF-8";
 	public static final String DEFAULT_PALETTE_STR = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+={}[]<>,.";
 	public static final char[] DEFAULT_PALETTE = DEFAULT_PALETTE_STR.toCharArray();
 	private static char[] CHAR_PALETTE = DEFAULT_PALETTE;
+	private static String SALT_STRING = "";
+	private static byte[] SALT_BYTES = null;
 
 	/** @param charPalette if Null or Empty, the default Palette is used */
-	public static void season( String charPalette ) {
+	public static void season( String charPalette, String salt ) throws Exception {
+		if ( salt != null ) {
+			SALT_STRING = salt;
+		}
+		SALT_BYTES = SALT_STRING.getBytes( DEFAULT_CHARSET );
 		if ( StrUtl.isNotEmpty( charPalette ) ) {
+			Log.d( "Crypto charPalette: %s", charPalette );
 			CHAR_PALETTE = charPalette.toCharArray();
+		} else {
+			Log.e( "Crypto charPalette: default - unsafe" );
 		}
 	}
-
 
 	/**
 	 * Convert the given bytes to a String.<br>
@@ -76,6 +85,8 @@ public class Crypto {
 	private String encryptionAlgorithm = "AES";
 	private String transforms = "AES/CBC/PKCS5Padding";
 	private String charEncoding = "UTF-8";
+	private final String salt = SALT_STRING;
+	private byte[] saltBytes = SALT_BYTES;
 
 	public Crypto() {
 	}
@@ -84,6 +95,29 @@ public class Crypto {
 		this.encryptionAlgorithm = encryptionAlgorithm;
 		this.transforms = cipherTransforms;
 		this.charEncoding = charEncoding;
+
+		try {
+			saltBytes = salt.getBytes( charEncoding );
+		} catch ( Exception e ) {
+			throw new IllegalStateException( "unable to obtain saltbytes" );
+		}
+	}
+
+	private String salty( String string ) {
+		if ( salt != null && !salt.isEmpty() ) {
+			return string + salt;
+		}
+		return string;
+	}
+
+	private byte[] salty( byte[] bytes ) {
+		if ( salt != null && !salt.isEmpty() ) {
+			byte[] out = new byte[bytes.length + saltBytes.length];
+			System.arraycopy( bytes, 0, out, 0, bytes.length );
+			System.arraycopy( saltBytes, 0, out, bytes.length, saltBytes.length );
+			return out;
+		}
+		return bytes;
 	}
 
 	/**
@@ -93,8 +127,8 @@ public class Crypto {
 	 * @return encrypted byte[]
 	 */
 	public byte[] encrypt( byte[] unencryptedMsg, byte[] keyPhrase, byte[] initialVector ) throws
-			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-			InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+	        NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
+	        InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
 		SecretKeySpec secret = new SecretKeySpec( keyPhrase, encryptionAlgorithm );
 		IvParameterSpec iv = new IvParameterSpec( initialVector );
 		Cipher cipher = Cipher.getInstance( transforms );
@@ -106,11 +140,13 @@ public class Crypto {
 	/**
 	 * Encrypts plaintext using AES 128bit key and a Chain Block Cipher and returns a base64 encoded string
 	 * 
+	 * @param unencryptedMsg the message
+	 * @param keyPhrase
 	 * @return Base64 encoded string
 	 */
 	public String encrypt( String unencryptedMsg, String keyPhrase ) throws
-			UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
-			InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+	        UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
+	        InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
 		byte[] msgBytes = unencryptedMsg.getBytes( charEncoding );
 		byte[] keyBytes = getKeyBytes( keyPhrase );
 		String encString = Base64.getEncoder().encodeToString( encrypt( msgBytes, keyBytes, keyBytes ) );
@@ -124,8 +160,8 @@ public class Crypto {
 	 * @return decryped byte[]
 	 */
 	public byte[] decrypt( byte[] encryptedMsg, byte[] keyPhrase, byte[] initVector ) throws
-			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-			InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+	        NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
+	        InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
 		Cipher cipher = Cipher.getInstance( transforms );
 		SecretKeySpec secret = new SecretKeySpec( keyPhrase, encryptionAlgorithm );
 		IvParameterSpec iv = new IvParameterSpec( initVector );
@@ -135,10 +171,10 @@ public class Crypto {
 	}
 
 	/** Decrypts a base64 encoded string using the given key (AES 128bit key and a Chain Block Cipher) */
-	public String decrypt( String encryptedMsg, String key ) throws KeyException, GeneralSecurityException, GeneralSecurityException,
-			InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
+	public String decrypt( String encryptedMsg, String keyPhrase ) throws KeyException, GeneralSecurityException, GeneralSecurityException,
+	        InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
 		byte[] encryptedBytes = Base64.getDecoder().decode( encryptedMsg );
-		byte[] keyBytes = getKeyBytes( key );
+		byte[] keyBytes = getKeyBytes( keyPhrase );
 		String unencryptedMsg = new String( decrypt( encryptedBytes, keyBytes, keyBytes ), charEncoding );
 		return unencryptedMsg;
 	}
@@ -149,7 +185,7 @@ public class Crypto {
 	 * however you will not be able to convert from the string back to the byte[] without losing data
 	 */
 	public String toStringLossy( byte[] bytes ) {
-		return toStringLossy( bytes, DEFAULT_PALETTE );
+		return toStringLossy( bytes, CHAR_PALETTE );
 	}
 
 	private byte[] getKeyBytes( String key ) throws UnsupportedEncodingException {
@@ -161,7 +197,7 @@ public class Crypto {
 
 	public static void main( String[] args ) throws Exception {
 		example1( "aaron", "harris", "Hello World" );
-		example1( "aaron", "harrif", "Hello World" );
+		example1( "aaron", "harris", "Hello World" );
 	}
 
 	private static void example1( String user, String pass, String inMsg ) throws Exception {
@@ -201,8 +237,7 @@ public class Crypto {
 			// Ideally, the user's password would be encoded on the client and transmitted to the server along with a username.
 			// Then on the server the received encoded password is converted to the lossyString
 			// and compared to the lossyString we stored for the requested username when they last set their password.
-			String simpleEncoded = toStringLossy( encMsg.getBytes(),
-					"1234567890!@#$AqBwCeDrEtFyGuHiIoJpKaLsMdNfOgPhQjRkSlTzUxVcWvXbYnZm1234567890!@#$AqBwCeDrEtFyGuHiIoJp".toCharArray() );
+			String simpleEncoded = toStringLossy( encMsg.getBytes(), CHAR_PALETTE );
 			Log.d( "Enc: '%s'", simpleEncoded );
 
 		} catch ( BadPaddingException e ) {
