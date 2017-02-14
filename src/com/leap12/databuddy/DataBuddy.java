@@ -33,7 +33,7 @@ public final class DataBuddy {
 	private DataBuddy() {
 		try {
 			Config.get().initialize( System.getProperties() );
-			Crypto.season( Config.get().getCharPalette( null ) );
+			Crypto.season( Config.get().getCharPalette( null ), Config.get().getProps().getString( "crypt.salt" ) );
 		} catch ( Exception e ) {
 			throw new IllegalStateException( e );
 		}

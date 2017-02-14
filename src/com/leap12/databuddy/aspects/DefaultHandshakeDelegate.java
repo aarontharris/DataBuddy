@@ -24,6 +24,29 @@ import com.leap12.databuddy.BaseConnectionDelegate;
 
 /**
  * The default launchpad connection. It serves as the Connection "Factory", routing a client to the appropriate connection based on how they connect.
+ * 
+ * <pre>
+ * Example Post Request handler
+ * 
+ * // for ?at={str$at}, the at and {str$at} must match
+ * @HttpPost( "/user/create/{str$username}?at={str$at}" )
+ * private void createUser( HttpRequest request, HttpResponse response, PropsRead params ) {
+ * 	try {
+ * 		Log.d( &quot;Received Request matching '%s': %s, %s&quot;,
+ * 		        request.getPath(),
+ * 		        params.getString( &quot;username&quot; ),
+ * 		        params.getString( &quot;at&quot; )
+ * 		        );
+ * 
+ * 		// DataStore db = getDb( animalsKey );
+ * 
+ * 		response.appendBody( "WOOT" );
+ * 	} catch ( Exception e ) {
+ * 		response.setStatusCode( e );
+ * 	}
+ * }
+ * 
+ * </pre>
  */
 public class DefaultHandshakeDelegate extends BaseConnectionDelegate {
 
@@ -56,11 +79,16 @@ public class DefaultHandshakeDelegate extends BaseConnectionDelegate {
 				try {
 					getClientConnection().setKeepAlive( false );
 					HttpResponse response = handleHttpRequest( request );
+					if ( response.getError() != null ) {
+						Log.e( response.getError() );
+					}
 					writeMsg( response.toString() );
 				} catch ( Exception e ) {
 					HttpResponse errResp = new HttpResponse();
-					String statusId = errResp.setStatusCode( HttpStatusCode.ERR_INTERNAL, e );
-					Log.e( "StatusID: " + statusId );
+					errResp.setStatusCode( HttpStatusCode.ERR_INTERNAL, e );
+					if ( errResp.getError() != null ) {
+						Log.e( errResp.getError() );
+					}
 					writeMsg( errResp.toString() );
 				}
 				return true;

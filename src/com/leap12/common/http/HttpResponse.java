@@ -100,6 +100,10 @@ public class HttpResponse {
 		defaultHeaders.add( new Pair<String, String>( "Server", "DataBuddy/1.1" ) );
 	}
 
+	public Exception getError() {
+		return error;
+	}
+
 	public void addHeader( String key, String value ) {
 		if ( mHeaders == null ) {
 			mHeaders = new HashSet<>();
@@ -116,8 +120,8 @@ public class HttpResponse {
 	 */
 	public String setStatusCode( HttpStatusCode code, @Nullable Exception e ) {
 		this.mCode = code;
-		this.error = e;
 		this.statusIdentifier = Thread.currentThread().getId() + "." + System.currentTimeMillis();
+		this.error = new HttpException( code, this.statusIdentifier, e );
 		return this.statusIdentifier;
 	}
 
