@@ -5,6 +5,6 @@ import com.google.gson.GsonBuilder;
 
 public class GsonUtl {
 
-	public static final Gson vanilla = new GsonBuilder().create();
+    public static final Gson vanilla = new GsonBuilder().create();
 
 }

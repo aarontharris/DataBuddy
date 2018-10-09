@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/DataBuddy.iml" filepath="$PROJECT_DIR$/DataBuddy.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DataBuddyClient/DataBuddyClient.iml" filepath="$PROJECT_DIR$/DataBuddyClient/DataBuddyClient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DataBuddyExample/DataBuddyExample.iml" filepath="$PROJECT_DIR$/DataBuddyExample/DataBuddyExample.iml" />
+    </modules>
+  </component>
+</project>

@@ -137,7 +137,7 @@ public class ClientConnection {
 	}
 
 	/**
-	 * Auto-Flushes every line see {@link #writeLnMsgSafe(String, boolean)} if you want to batch never throws - convenience for when you don't care
+	 * Auto-Flushes every line see {@link #writeLnMsgSafe(String)} if you want to batch never throws - convenience for when you don't care
 	 * about errors
 	 */
 	public final void writeLnMsgSafe( String msg ) {
@@ -161,7 +161,6 @@ public class ClientConnection {
 	 * 
 	 * @param msg - the message
 	 * @param appendNewLines - number of newline chars to be appended to the message
-	 * @param flush - flush the stream after write
 	 * @throws Exception - if something went wrong during the write
 	 */
 	public final void writeMsg( String msg, int appendNewLines ) throws Exception {
