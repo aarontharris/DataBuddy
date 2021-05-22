@@ -233,7 +233,7 @@ public class HttpRequest {
 			StringBuilder sb = new StringBuilder();
 			for ( String key : headers.keySet() ) {
 				String value = headers.get( key );
-				sb.append( String.format( "HEADER: '%s'='%s'", key, value ) ).append( newLine );
+				sb.append( String.format( "HEADER blah: '%s'='%s'", key, value ) ).append( newLine );
 			}
 			for ( String key : queryParams.keySet() ) {
 				String value = queryParams.getString( key );
