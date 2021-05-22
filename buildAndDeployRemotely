@@ -22,5 +22,7 @@ sub deploy {
   system ("ssh_ec2_oregon1 $remoteStop");
   select(undef, undef, undef, 1.000);
   system ("ssh_ec2_oregon1 $remoteStart");
+  system ('echo "\n\nYou may need to ssh_ec2_oregon1 and manually stop and start, sometimes youll need to crontab -e and comment
+  out the job... sux... fix it"');
 }
 
