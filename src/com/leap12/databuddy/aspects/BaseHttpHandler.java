@@ -6,6 +6,7 @@ import com.leap12.common.http.HttpResponse.HttpException;
 import com.leap12.databuddy.aspects.handlers.DbReadHandler;
 import com.leap12.databuddy.aspects.handlers.DbWriteHandler;
 import com.leap12.databuddy.aspects.handlers.EchoHandler;
+import com.leap12.databuddy.aspects.handlers.KotlinHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +19,7 @@ public class BaseHttpHandler {
         handlers.put("/echo", EchoHandler.class);
         handlers.put("/write", DbWriteHandler.class);
         handlers.put("/read", DbReadHandler.class);
-        // handlers.put("/kot", KotlinHandler.class);
+        handlers.put("/kot", KotlinHandler.class);
     }
 
     public static BaseHttpHandler getHandlerByPathName(String name) throws InstantiationException, IllegalAccessException {
