@@ -3,6 +3,7 @@ package com.leap12.databuddy.data.store;
 import com.leap12.databuddy.sqlite.SqliteDataStoreManager;
 import com.leap12.databuddy.sqlite.SqliteDataStoreSimple;
 import com.leap12.databuddy.sqlite.SqliteShardKey;
+import org.json.JSONArray;
 
 /**
  * Construct for every request, but *usually* each request will get the same instance (not guaranteed)
@@ -33,4 +34,10 @@ public class KeyValStore {
         return result;
     }
 
+    public JSONArray loadAll(String topic, String subtopic) throws Exception {
+        dataStore.beginReads();
+        JSONArray result = dataStore.loadArrayOfKeyVals(topic, subtopic, null, null);
+        dataStore.endReads();
+        return result;
+    }
 }

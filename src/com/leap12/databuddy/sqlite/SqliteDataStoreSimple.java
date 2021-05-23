@@ -99,11 +99,13 @@ public class SqliteDataStoreSimple extends SqliteDataStore {
         return null;
     }
 
+    /** All values for a Topic / SubTopic */
     public JSONArray loadArrayOfVals(String topic, String subtopic, Integer offset, Integer limit) throws Exception {
         String table = toTableName(topic, subtopic);
         return selectArrayOfVals(table, offset, limit);
     }
 
+    /** All values for a Topic / SubTopic */
     public JSONArray loadArrayOfKeyVals(String topic, String subtopic, Integer offset, Integer limit) throws Exception {
         String table = toTableName(topic, subtopic);
         return selectArrayOfKeyVals(table, offset, limit);
