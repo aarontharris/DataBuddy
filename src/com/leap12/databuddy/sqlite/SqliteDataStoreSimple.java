@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import java.nio.charset.Charset;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -99,13 +100,17 @@ public class SqliteDataStoreSimple extends SqliteDataStore {
         return null;
     }
 
-    /** All values for a Topic / SubTopic */
+    /**
+     * All values for a Topic / SubTopic
+     */
     public JSONArray loadArrayOfVals(String topic, String subtopic, Integer offset, Integer limit) throws Exception {
         String table = toTableName(topic, subtopic);
         return selectArrayOfVals(table, offset, limit);
     }
 
-    /** All values for a Topic / SubTopic */
+    /**
+     * All values for a Topic / SubTopic
+     */
     public JSONArray loadArrayOfKeyVals(String topic, String subtopic, Integer offset, Integer limit) throws Exception {
         String table = toTableName(topic, subtopic);
         return selectArrayOfKeyVals(table, offset, limit);
@@ -191,6 +196,12 @@ public class SqliteDataStoreSimple extends SqliteDataStore {
             rs = stmt.executeQuery(query);
             // json = ResultSetJSonAdapter.toJsonArrayOfVals( rs );
             out = coercer.coerce(rs);
+        } catch (SQLException e) {
+            if (e.getMessage().startsWith("[SQLITE_ERROR] SQL error or missing database (no such table: ")) {
+                // NO-OP
+            } else {
+                throw e;
+            }
         } finally {
             if (rs != null) {
                 rs.close();
@@ -216,7 +227,7 @@ public class SqliteDataStoreSimple extends SqliteDataStore {
 
     private JSONArray selectArrayOfKeyVals(String table, Integer offset, Integer limit) throws Exception {
         String query = toQuerySelectMany(table, offset, limit);
-        return selectMany(query, (v) -> {
+        JSONArray result = selectMany(query, (v) -> {
             try {
                 return ResultSetJSonAdapter.varToJsonArrayOfKeyVals(v);
             } catch (Exception e) {
@@ -224,6 +235,7 @@ public class SqliteDataStoreSimple extends SqliteDataStore {
                 return new JSONArray();
             }
         });
+        return result != null ? result : new JSONArray();
     }
 
     private JSONObject selectMap(String table, Integer offset, Integer limit) throws Exception {
@@ -248,6 +260,12 @@ public class SqliteDataStoreSimple extends SqliteDataStore {
             rs = stmt.executeQuery(query);
             if (rs.next()) {
                 row = VarType.fromResultSet(rs, type);
+            }
+        } catch (SQLException e) {
+            if (e.getMessage().startsWith("[SQLITE_ERROR] SQL error or missing database (no such table: ")) {
+                // NO-OP
+            } else {
+                throw e;
             }
         } finally {
             if (rs != null) {

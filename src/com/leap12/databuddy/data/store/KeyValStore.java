@@ -1,5 +1,6 @@
 package com.leap12.databuddy.data.store;
 
+import com.leap12.common.NonNull;
 import com.leap12.databuddy.sqlite.SqliteDataStoreManager;
 import com.leap12.databuddy.sqlite.SqliteDataStoreSimple;
 import com.leap12.databuddy.sqlite.SqliteShardKey;
@@ -34,6 +35,7 @@ public class KeyValStore {
         return result;
     }
 
+    @NonNull
     public JSONArray loadAll(String topic, String subtopic) throws Exception {
         dataStore.beginReads();
         JSONArray result = dataStore.loadArrayOfKeyVals(topic, subtopic, null, null);
